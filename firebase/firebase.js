@@ -24,6 +24,7 @@ import {
   query, 
   where, 
   orderBy,
+  onSnapshot,
   serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
@@ -126,6 +127,7 @@ export {
   query,
   where,
   orderBy,
+  onSnapshot,
   serverTimestamp,
   B2_PROXY_URL
 };

@@ -878,5 +878,136 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ===== LIVE CUSTOMER CHAT FLOATING WIDGET =====
+function initCustomerLiveChat() {
+  if (document.getElementById('falconiLiveChatWidget')) return;
+
+  const widget = document.createElement('div');
+  widget.id = 'falconiLiveChatWidget';
+  widget.style.cssText = 'position:fixed; bottom:25px; right:25px; z-index:9990; font-family:Montserrat,sans-serif;';
+
+  widget.innerHTML = `
+    <button id="falconiChatToggleBtn" onclick="toggleLiveChatWidget()" style="background:linear-gradient(135deg, #c09b57 0%, #997836 100%); color:#0c0b0e; border:none; border-radius:50%; width:58px; height:58px; font-size:1.6rem; cursor:pointer; box-shadow:0 10px 25px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; position:relative; transition:transform 0.2s;">
+      💬
+      <span id="customerChatBadge" style="position:absolute; top:-4px; right:-4px; background:#e74c3c; color:#fff; font-size:0.68rem; font-weight:bold; width:20px; height:20px; border-radius:50%; display:none; align-items:center; justify-content:center; border:2px solid #0c0b0e;">1</span>
+    </button>
+
+    <div id="falconiChatModal" style="display:none; position:absolute; bottom:70px; right:0; width:340px; height:460px; background:rgba(18,16,22,0.95); border:1px solid #c09b57; border-radius:12px; backdrop-filter:blur(15px); box-shadow:0 15px 40px rgba(0,0,0,0.8); flex-direction:column; overflow:hidden;">
+      <div style="padding:0.9rem 1.2rem; background:rgba(25,22,30,0.8); border-bottom:1px solid rgba(192,155,87,0.2); display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span style="font-size:1.1rem;">💬</span>
+          <div>
+            <strong style="color:#c09b57; font-size:0.9rem; display:block;">Falconi Live Concierge</strong>
+            <span style="font-size:0.68rem; color:#8c8270;">● Advisor Online</span>
+          </div>
+        </div>
+        <button onclick="toggleLiveChatWidget()" style="background:none; border:none; color:#c09b57; font-size:1.4rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <div id="customerChatMessages" style="flex:1; padding:1rem; overflow-y:auto; display:flex; flex-direction:column; gap:0.6rem; font-size:0.83rem;">
+        <div style="align-self:flex-start; background:rgba(35,30,42,0.9); color:#e6d5b8; border:1px solid rgba(192,155,87,0.2); padding:0.65rem 0.9rem; border-radius:10px; border-bottom-left-radius:2px; max-width:85%;">
+          Welcome to Falconi Parfums. How may our fragrance advisor assist you today?
+        </div>
+      </div>
+
+      <div style="padding:0.75rem; border-top:1px solid rgba(192,155,87,0.2); display:flex; gap:0.5rem; background:rgba(25,22,30,0.8);">
+        <input type="text" id="customerMsgInput" placeholder="Type your message..." style="flex:1; background:rgba(12,11,14,0.9); border:1px solid rgba(192,155,87,0.3); padding:0.6rem 0.8rem; border-radius:6px; color:#e6d5b8; font-size:0.82rem; outline:none;" onkeypress="if(event.key==='Enter') sendCustomerMessage()" />
+        <button onclick="sendCustomerMessage()" style="background:linear-gradient(135deg, #c09b57 0%, #997836 100%); color:#0c0b0e; border:none; padding:0.6rem 0.9rem; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;">Send</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(widget);
+  initCustomerChatFirebase();
+}
+
+let customerChatId = localStorage.getItem('falconiChatId');
+if (!customerChatId) {
+  customerChatId = 'chat_' + Date.now();
+  localStorage.setItem('falconiChatId', customerChatId);
+}
+
+window.toggleLiveChatWidget = function() {
+  const modal = document.getElementById('falconiChatModal');
+  const badge = document.getElementById('customerChatBadge');
+  if (!modal) return;
+
+  if (modal.style.display === 'none' || modal.style.display === '') {
+    modal.style.display = 'flex';
+    if (badge) badge.style.display = 'none';
+  } else {
+    modal.style.display = 'none';
+  }
+};
+
+async function initCustomerChatFirebase() {
+  try {
+    const { db, collection, doc, onSnapshot, query, orderBy } = await import('./firebase/firebase.js');
+    const msgContainer = document.getElementById('customerChatMessages');
+    if (!msgContainer) return;
+
+    const q = query(collection(db, 'chats', customerChatId, 'messages'), orderBy('timestamp', 'asc'));
+
+    onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) return;
+
+      let html = `<div style="align-self:flex-start; background:rgba(35,30,42,0.9); color:#e6d5b8; border:1px solid rgba(192,155,87,0.2); padding:0.65rem 0.9rem; border-radius:10px; border-bottom-left-radius:2px; max-width:85%;">Welcome to Falconi Parfums. How may our fragrance advisor assist you today?</div>`;
+
+      snapshot.forEach(docSnap => {
+        const m = docSnap.data();
+        const isCustomer = m.sender === 'customer';
+        html += `
+          <div style="align-self:${isCustomer ? 'flex-end' : 'flex-start'}; background:${isCustomer ? 'linear-gradient(135deg, #c09b57 0%, #997836 100%)' : 'rgba(35,30,42,0.9)'}; color:${isCustomer ? '#0c0b0e' : '#e6d5b8'}; ${isCustomer ? 'font-weight:500;' : 'border:1px solid rgba(192,155,87,0.2);'} padding:0.65rem 0.9rem; border-radius:10px; ${isCustomer ? 'border-bottom-right-radius:2px;' : 'border-bottom-left-radius:2px;'} max-width:85%; word-break:break-word;">
+            ${m.text}
+          </div>
+        `;
+      });
+
+      msgContainer.innerHTML = html;
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    });
+  } catch (err) {
+    console.log('Customer Chat Init notice:', err.message);
+  }
+}
+
+window.sendCustomerMessage = async function() {
+  const input = document.getElementById('customerMsgInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+
+  try {
+    const { db, collection, doc, setDoc, addDoc, serverTimestamp, auth } = await import('./firebase/firebase.js');
+    const user = auth.currentUser;
+    const clientName = user ? (user.displayName || user.email.split('@')[0]) : 'Client';
+    const clientEmail = user ? user.email : 'guest@falconiparfums.com';
+
+    // Ensure parent chat exists
+    await setDoc(doc(db, 'chats', customerChatId), {
+      customerName: clientName,
+      customerEmail: clientEmail,
+      lastMessage: text,
+      updatedAt: serverTimestamp(),
+      unreadAdvisor: true
+    }, { merge: true });
+
+    // Add message
+    await addDoc(collection(db, 'chats', customerChatId, 'messages'), {
+      sender: 'customer',
+      text: text,
+      timestamp: serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Customer Send Message Error:', err);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initCustomerLiveChat();
+});
+
 console.log('%c✦ Falconi Parfums ✦', 'color:#c09b57;font-size:20px;font-family:serif;');
 console.log('%cInspired by Oriental Perfumery', 'color:#d4af6f;font-size:12px;');
