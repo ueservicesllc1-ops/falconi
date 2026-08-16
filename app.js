@@ -1002,6 +1002,15 @@ window.sendCustomerMessage = async function() {
     });
   } catch (err) {
     console.error('Customer Send Message Error:', err);
+    // Local fallback display
+    const msgContainer = document.getElementById('customerChatMessages');
+    if (msgContainer) {
+      const localDiv = document.createElement('div');
+      localDiv.style.cssText = "align-self:flex-end; background:linear-gradient(135deg, #c09b57 0%, #997836 100%); color:#0c0b0e; font-weight:500; padding:0.65rem 0.9rem; border-radius:10px; border-bottom-right-radius:2px; max-width:85%; word-break:break-word;";
+      localDiv.textContent = text;
+      msgContainer.appendChild(localDiv);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
   }
 };
 
