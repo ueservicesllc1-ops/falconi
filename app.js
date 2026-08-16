@@ -982,10 +982,77 @@ window.sendCustomerMessage = async function() {
   try {
     const { db, collection, doc, setDoc, addDoc, serverTimestamp, auth } = await import('./firebase/firebase.js');
     const user = auth.currentUser;
-    const clientName = user ? (user.displayName || user.email.split('@')[0]) : 'Client';
-    const clientEmail = user ? user.email : 'guest@falconiparfums.com';
 
-    // Ensure parent chat exists
+    let pendingStep = localStorage.getItem('falconiPendingNameStep') || 'start';
+    let storedName = localStorage.getItem('falconiClientName') || '';
+    
+    let clientName = user ? (user.displayName || user.email.split('@')[0]) : (storedName || 'Client');
+    let clientEmail = user ? user.email : 'guest@falconiparfums.com';
+
+    // Handle guest name capture flow
+    if (!user && !storedName) {
+      if (pendingStep === 'start') {
+        // Step 1: Send user's initial message (e.g. "hola")
+        localStorage.setItem('falconiPendingNameStep', 'awaiting_name');
+
+        await setDoc(doc(db, 'chats', customerChatId), {
+          customerName: 'Guest Customer',
+          customerEmail: clientEmail,
+          lastMessage: text,
+          updatedAt: serverTimestamp(),
+          unreadAdvisor: true
+        }, { merge: true });
+
+        await addDoc(collection(db, 'chats', customerChatId, 'messages'), {
+          sender: 'customer',
+          text: text,
+          timestamp: serverTimestamp()
+        });
+
+        // Bot asks for customer's name
+        setTimeout(async () => {
+          await addDoc(collection(db, 'chats', customerChatId, 'messages'), {
+            sender: 'advisor',
+            text: '👋 Welcome to Falconi Parfums! May we please know your name so our fragrance advisor can assist you better?',
+            timestamp: serverTimestamp()
+          });
+        }, 600);
+
+        return;
+      } else if (pendingStep === 'awaiting_name') {
+        // Step 2: Customer typed their name
+        localStorage.setItem('falconiClientName', text);
+        localStorage.setItem('falconiPendingNameStep', 'completed');
+        clientName = text;
+
+        await setDoc(doc(db, 'chats', customerChatId), {
+          customerName: clientName,
+          customerEmail: clientEmail,
+          lastMessage: `Name registered: ${clientName}`,
+          updatedAt: serverTimestamp(),
+          unreadAdvisor: true
+        }, { merge: true });
+
+        await addDoc(collection(db, 'chats', customerChatId, 'messages'), {
+          sender: 'customer',
+          text: text,
+          timestamp: serverTimestamp()
+        });
+
+        // Bot confirmation message
+        setTimeout(async () => {
+          await addDoc(collection(db, 'chats', customerChatId, 'messages'), {
+            sender: 'advisor',
+            text: `Thank you, ${clientName}! An advisor will be with you shortly. How can we help you today?`,
+            timestamp: serverTimestamp()
+          });
+        }, 600);
+
+        return;
+      }
+    }
+
+    // Standard message flow for logged-in or named users
     await setDoc(doc(db, 'chats', customerChatId), {
       customerName: clientName,
       customerEmail: clientEmail,
@@ -994,7 +1061,6 @@ window.sendCustomerMessage = async function() {
       unreadAdvisor: true
     }, { merge: true });
 
-    // Add message
     await addDoc(collection(db, 'chats', customerChatId, 'messages'), {
       sender: 'customer',
       text: text,
