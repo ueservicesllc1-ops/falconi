@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Falconi Parfums</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .admin-body {
+      background: radial-gradient(circle at top center, rgba(30, 22, 12, 0.95) 0%, rgba(8, 7, 10, 0.98) 100%);
+      color: #e6d5b8;
+      min-height: 100vh;
+      font-family: 'Montserrat', sans-serif;
+      padding-bottom: 4rem;
+    }
+    .admin-header {
+      background: rgba(18, 16, 22, 0.95);
+      border-bottom: 1px solid #3a2e1d;
+      backdrop-filter: blur(20px);
+      padding: 1.25rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .admin-brand img {
+      height: 38px;
+    }
+    .admin-brand h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      color: #c09b57;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+    .admin-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .user-badge {
+      font-size: 0.8rem;
+      color: #9a8f7c;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      border: 1px solid rgba(192, 155, 87, 0.2);
+    }
+    .btn-action-ghost {
+      background: none;
+      border: 1px solid #c09b57;
+      color: #c09b57;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    .btn-action-ghost:hover {
+      background: #c09b57;
+      color: #000;
+    }
+
+    /* Main Container */
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+    .dashboard-hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .dashboard-hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      color: #d4af6f;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    .dashboard-hero p {
+      font-size: 0.9rem;
+      color: #9a8f7c;
+    }
+
+    /* 3x3 RECTANGULAR BUTTON GRID */
+    .grid-3x3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+    }
+    @media (max-width: 992px) {
+      .grid-3x3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid-3x3 { grid-template-columns: 1fr; }
+    }
+
+    .btn-rect-card {
+      background: linear-gradient(145deg, rgba(25, 21, 30, 0.9) 0%, rgba(15, 13, 18, 0.95) 100%);
+      border: 1px solid rgba(192, 155, 87, 0.25);
+      border-radius: 12px;
+      padding: 2.25rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      min-height: 170px;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-rect-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #c09b57, #d4af6f, transparent);
+      opacity: 0.6;
+      transition: all 0.3s ease;
+    }
+    .btn-rect-card:hover {
+      transform: translateY(-6px);
+      border-color: #c09b57;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(192, 155, 87, 0.2);
+      background: linear-gradient(145deg, rgba(35, 29, 42, 0.95) 0%, rgba(20, 17, 25, 0.98) 100%);
+    }
+    .btn-rect-card:hover::before {
+      opacity: 1;
+      height: 4px;
+    }
+    .card-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: rgba(192, 155, 87, 0.12);
+      border: 1px solid rgba(192, 155, 87, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #c09b57;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    .card-content h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      color: #e6d5b8;
+      margin: 0 0 0.3rem 0;
+      letter-spacing: 0.5px;
+    }
+    .card-content p {
+      font-size: 0.78rem;
+      color: #8c8270;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .card-footer-tag {
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #c09b57;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 600;
+    }
+
+    /* Modal Styling */
+    .admin-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(6, 5, 8, 0.88);
+      backdrop-filter: blur(16px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 1.5rem;
+    }
+    .admin-modal-overlay.open {
+      opacity: 1; visibility: visible;
+    }
+    .admin-modal-card {
+      background: rgba(18, 16, 22, 0.96);
+      border: 1px solid #c09b57;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2.25rem;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(192, 155, 87, 0.15);
+    }
+    .admin-modal-card.wide {
+      max-width: 900px;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 1.25rem; right: 1.25rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #9a8f7c;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close-btn:hover {
+      background: #c09b57; color: #000;
+    }
+
+    /* Form controls */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    .form-full { grid-column: 1 / -1; }
+    .field-group {
+      display: flex; flex-direction: column; gap: 0.35rem;
+    }
+    .field-group label {
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #c09b57;
+    }
+    .field-group input, .field-group select, .field-group textarea {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(192, 155, 87, 0.25);
+      border-radius: 6px;
+      padding: 0.75rem 0.9rem;
+      color: #fff;
+      font-size: 0.85rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      outline: none; border-color: #c09b57;
+      box-shadow: 0 0 10px rgba(192, 155, 87, 0.2);
+    }
+    .btn-submit-gold {
+      background: linear-gradient(135deg, #c09b57 0%, #9a7632 100%);
+      color: #08070a;
+      border: none;
+      padding: 0.85rem 2rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    .btn-submit-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(192, 155, 87, 0.4);
+    }
+    .status-alert {
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      margin-top: 1rem;
+      display: none;
+      text-align: center;
+    }
+
+    /* Table styles */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.25rem;
+      font-size: 0.85rem;
+    }
+    .admin-table th, .admin-table td {
+      padding: 0.85rem;
+      border-bottom: 1px solid rgba(192, 155, 87, 0.15);
+      text-align: left;
+    }
+    .admin-table th {
+      color: #c09b57;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .badge-status {
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-paid { background: rgba(40, 167, 69, 0.2); color: #75b798; border: 1px solid #28a745; }
+    .badge-shipped { background: rgba(0, 123, 255, 0.2); color: #6ea8fe; border: 1px solid #0d6efd; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="admin-brand">
+      <img src="LOGOBLANCO.png" alt="Falconi" />
+      <h2>Admin Control Center</h2>
+    </div>
+    <div class="admin-top-actions">
+      <span class="user-badge" id="adminUserBadge">ueservicesllc1@gmail.com</span>
+      <a href="index.html" class="btn-action-ghost">&larr; Volver a la Tienda</a>
+      <button class="btn-action-ghost" id="adminLogoutBtn" style="background: rgba(220,53,69,0.15); border-color:#dc3545; color:#ff8a8a;">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <!-- Container -->
+  <main class="dashboard-container">
+    <div class="dashboard-hero">
+      <h1>Panel de Administración Falconi</h1>
+      <p>Gestión de Productos, Pedidos en Vivo con Stripe y Envíos Automatizados con Shippo</p>
+    </div>
+
+    <!-- 3x3 RECTANGULAR BUTTON GRID -->
+    <div class="grid-3x3">
+
+      <!-- BUTTON 1: PRODUCT MANAGER -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalProducts')">
+        <div class="card-icon-box">📦</div>
+        <div class="card-content">
+          <h3>Gestor de Productos</h3>
+          <p>Crear y editar perfumes con foto (B2), precio y casillero de % Descuento.</p>
+        </div>
+        <div class="card-footer-tag">Abrir Panel de Productos &rarr;</div>
+      </div>
+
+      <!-- BUTTON 2: ORDERS MANAGER (STRIPE & SHIPPO) -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalOrders')">
+        <div class="card-icon-box">🛒</div>
+        <div class="card-content">
+          <h3>Pedidos y Compras</h3>
+          <p>Ver ventas registradas con estado de pago Stripe y generación de envíos Shippo.</p>
+        </div>
+        <div class="card-footer-tag">Ver Compras en Vivo &rarr;</div>
+      </div>
+
+      <!-- BUTTON 3: SHIPPO SHIPPING API -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalShippo')">
+        <div class="card-icon-box">🚚</div>
+        <div class="card-content">
+          <h3>Integración Shippo Envíos</h3>
+          <p>Cotizar tarifas, generar etiquetas oficiales de envío y número de rastreo.</p>
+        </div>
+        <div class="card-footer-tag">API Shippo Conectada &rarr;</div>
+      </div>
+
+      <!-- BUTTON 4: STRIPE PAYMENTS -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalStripe')">
+        <div class="card-icon-box">💳</div>
+        <div class="card-content">
+          <h3>Pasarela Stripe</h3>
+          <p>Estado de Checkout seguro con tarjeta de crédito/débito y métricas de cobro.</p>
+        </div>
+        <div class="card-footer-tag">Pasarela Activa &rarr;</div>
+      </div>
+
+      <!-- BUTTON 5: BACKBLAZE B2 STORAGE -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalMediaB2')">
+        <div class="card-icon-box">🖼️</div>
+        <div class="card-content">
+          <h3>Biblioteca Media (B2)</h3>
+          <p>Gestión directa del almacenamiento de imágenes y videos en Backblaze B2.</p>
+        </div>
+        <div class="card-footer-tag">Almacenamiento S3 &rarr;</div>
+      </div>
+
+      <!-- BUTTON 6: CLIENT BASE -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalClients')">
+        <div class="card-icon-box">👥</div>
+        <div class="card-content">
+          <h3>Base de Clientes</h3>
+          <p>Lista de usuarios registrados mediante Firebase Auth en la plataforma.</p>
+        </div>
+        <div class="card-footer-tag">Ver Registrados &rarr;</div>
+      </div>
+
+      <!-- BUTTON 7: DISCOUNTS & PROMOS -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalDiscounts')">
+        <div class="card-icon-box">🏷️</div>
+        <div class="card-content">
+          <h3>Descuentos y Promos</h3>
+          <p>Configurar % de rebajas generales para catálogo o perfumes seleccionados.</p>
+        </div>
+        <div class="card-footer-tag">Gestión de Ofertas &rarr;</div>
+      </div>
+
+      <!-- BUTTON 8: SALES ANALYTICS -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalAnalytics')">
+        <div class="card-icon-box">📊</div>
+        <div class="card-content">
+          <h3>Analítica & Ventas</h3>
+          <p>Resumen de ingresos totales, pedidos completados y promedio de venta.</p>
+        </div>
+        <div class="card-footer-tag">Estadísticas &rarr;</div>
+      </div>
+
+      <!-- BUTTON 9: STORE CONFIG -->
+      <div class="btn-rect-card" onclick="openAdminModal('modalSettings')">
+        <div class="card-icon-box">⚙️</div>
+        <div class="card-content">
+          <h3>Ajustes de la Tienda</h3>
+          <p>Dirección HQ para Shippo, divisa por defecto (USD) y llaves de integración.</p>
+        </div>
+        <div class="card-footer-tag">Configuración &rarr;</div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =========================================================
+       MODAL 1: PRODUCT CREATOR & MANAGER
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalProducts">
+    <div class="admin-modal-card wide">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalProducts')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">📦 Crear / Gestionar Producto</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Sube 1 foto a B2, asigna nombre, descripción, precio y porcentaje de descuento.</p>
+
+      <form id="productForm">
+        <div class="form-grid">
+          <div class="field-group">
+            <label>Nombre del Perfume</label>
+            <input type="text" id="pName" placeholder="e.g. Oud Noir Special Edition" required />
+          </div>
+          <div class="field-group">
+            <label>Categoría</label>
+            <select id="pCategory">
+              <option value="unisex">Unisex</option>
+              <option value="hombre">Hombre / Men</option>
+              <option value="mujer">Mujer / Women</option>
+              <option value="coleccion">Colección Exclusiva</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Precio Base ($ USD)</label>
+            <input type="number" id="pPrice" step="0.01" placeholder="189.00" required />
+          </div>
+          <div class="field-group">
+            <label>Descuento en % (Casillero Opcional)</label>
+            <input type="number" id="pDiscount" min="0" max="100" placeholder="e.g. 15 (para 15% desc)" />
+          </div>
+          <div class="field-group form-full">
+            <label>1 Foto del Producto (Subir a B2 o URL)</label>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" id="pImage" placeholder="http://localhost:4000/api/media/file/products/..." required style="flex:1;" />
+              <input type="file" id="pSingleFile" style="display:none;" accept="image/*" />
+              <button type="button" class="btn-action-ghost" onclick="document.getElementById('pSingleFile').click()">Subir Foto a B2</button>
+            </div>
+            <span id="b2UploadStatus" style="font-size:0.75rem; color:#c09b57; margin-top:0.2rem;"></span>
+          </div>
+          <div class="field-group form-full">
+            <label>Notas Olfativas (separadas por coma)</label>
+            <input type="text" id="pNotes" placeholder="Oud Arábigo, Rosa de Damasco, Ámbar" required />
+          </div>
+          <div class="field-group form-full">
+            <label>Descripción</label>
+            <textarea id="pDesc" rows="3" placeholder="Descripción detallada del perfume..." required></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit-gold">Guardar Producto en Firestore &#x2756;</button>
+        <div id="productStatus" class="status-alert"></div>
+      </form>
+
+      <h3 style="font-family:'Cormorant Garamond',serif; color:#e6d5b8; margin-top:2rem;">Catálogo Firestore Existente</h3>
+      <div id="firestoreCatalogGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: ORDERS MANAGER (STRIPE & SHIPPO)
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalOrders">
+    <div class="admin-modal-card wide">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalOrders')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">🛒 Pedidos & Compras Realizadas</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Lista de ventas generadas desde el carrito con pago Stripe e integración Shippo.</p>
+
+      <div id="ordersTableContainer" style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Cliente</th>
+              <th>Productos</th>
+              <th>Total ($)</th>
+              <th>Estado Pago</th>
+              <th>Envío Shippo</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <tr><td colspan="7" style="color:#8c8270; text-align:center;">Cargando pedidos de Firestore...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 3: SHIPPO SHIPPING API INTEGRATION
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalShippo">
+    <div class="admin-modal-card">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalShippo')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">🚚 Integración Envíos Shippo</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Token Live Activo: <code style="color:#c09b57;">shippo_live_18711fd5...</code></p>
+
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(192,155,87,0.2); border-radius:8px; padding:1.25rem; margin-top:1rem;">
+        <h4 style="color:#e6d5b8; margin-top:0;">Cotizador de Tarifas de Envío en Vivo</h4>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>Nombre Destinatario</label>
+            <input type="text" id="shipName" value="Cliente Falconi" />
+          </div>
+          <div class="field-group">
+            <label>Dirección</label>
+            <input type="text" id="shipAddress" value="123 Ocean Drive" />
+          </div>
+          <div class="field-group">
+            <label>Ciudad</label>
+            <input type="text" id="shipCity" value="Miami" />
+          </div>
+          <div class="field-group">
+            <label>Estado / ZIP</label>
+            <input type="text" id="shipState" value="FL 33139" />
+          </div>
+        </div>
+        <button type="button" class="btn-submit-gold" onclick="calculateShippoRatesLive()">Cotizar Tarifas de Transporte &rarr;</button>
+        <div id="shippoResults" style="margin-top:1rem; font-size:0.85rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 4: STRIPE PAYMENTS
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalStripe">
+    <div class="admin-modal-card">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalStripe')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">💳 Pasarela de Pago Stripe</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Conexión directa con Stripe Checkout Sessions para cobrar con tarjeta de crédito/débito.</p>
+
+      <div style="background:rgba(40,167,69,0.1); border:1px solid #28a745; padding:1rem; border-radius:8px; margin-top:1rem;">
+        <p style="color:#75b798; margin:0; font-size:0.85rem;">✓ Endpoint de Stripe Checkout activo en <code style="color:#fff;">http://localhost:4000/api/stripe/create-checkout-session</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 5: MEDIA B2 STORAGE
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalMediaB2">
+    <div class="admin-modal-card wide">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalMediaB2')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">🖼️ Biblioteca Backblaze B2 Storage</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Bucket: <code style="color:#c09b57;">falconi</code> | Servidor S3 en puerto 4000</p>
+      <div id="b2MediaGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; margin-top:1.5rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 6: CLIENTS
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalClients">
+    <div class="admin-modal-card">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalClients')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">👥 Base de Clientes</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Clientes registrados vía Firebase Auth en Falconi Parfums.</p>
+      <div id="clientsList" style="margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 7: DISCOUNTS & PROMOS
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalDiscounts">
+    <div class="admin-modal-card">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalDiscounts')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">🏷️ Descuentos & Ofertas Especiales</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Gestión de descuentos porcentuales en catálogo.</p>
+      <div id="discountsOverview" style="margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 8: ANALYTICS
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalAnalytics">
+    <div class="admin-modal-card">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalAnalytics')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">📊 Analítica de Ventas</h2>
+      <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin-top:1.5rem;">
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(192,155,87,0.2); padding:1.25rem; border-radius:8px; text-align:center;">
+          <h3 style="font-size:2rem; color:#c09b57; margin:0;" id="totalSalesVal">$0.00</h3>
+          <span style="font-size:0.75rem; color:#8c8270; text-transform:uppercase;">Ventas Totales</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(192,155,87,0.2); padding:1.25rem; border-radius:8px; text-align:center;">
+          <h3 style="font-size:2rem; color:#c09b57; margin:0;" id="totalOrdersCount">0</h3>
+          <span style="font-size:0.75rem; color:#8c8270; text-transform:uppercase;">Pedidos Procesados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 9: SETTINGS & SHIPPO ORIGIN ADDRESS
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalSettings">
+    <div class="admin-modal-card wide">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalSettings')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">⚙️ Configuración de Origen para Envíos Shippo</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Configura la dirección de donde salen tus paquetes (Origen / Remitente) para calcular exactamente el costo de envío con Shippo.</p>
+
+      <form id="shippoOriginForm">
+        <div class="form-grid">
+          <div class="field-group">
+            <label>Nombre Remitente / Tienda</label>
+            <input type="text" id="origName" value="Falconi Parfums HQ" required />
+          </div>
+          <div class="field-group">
+            <label>Teléfono de Contacto</label>
+            <input type="text" id="origPhone" value="+15513014573" required />
+          </div>
+          <div class="field-group form-full">
+            <label>Dirección (Calle y Número)</label>
+            <input type="text" id="origStreet" value="Main Street" required />
+          </div>
+          <div class="field-group">
+            <label>Ciudad</label>
+            <input type="text" id="origCity" value="Paterson" required />
+          </div>
+          <div class="field-group">
+            <label>Estado / Provincia</label>
+            <input type="text" id="origState" value="NJ" required />
+          </div>
+          <div class="field-group">
+            <label>Código Postal (ZIP)</label>
+            <input type="text" id="origZip" value="07522" required />
+          </div>
+          <div class="field-group">
+            <label>País</label>
+            <select id="origCountry">
+              <option value="US">Estados Unidos (US)</option>
+              <option value="MX">México (MX)</option>
+              <option value="ES">España (ES)</option>
+              <option value="CO">Colombia (CO)</option>
+              <option value="VE">Venezuela (VE)</option>
+              <option value="CA">Canadá (CA)</option>
+            </select>
+          </div>
+          <div class="field-group form-full">
+            <label>Correo Notificación de Envíos</label>
+            <input type="email" id="origEmail" value="shipping@falconiparfums.com" required />
+          </div>
+
+          <h3 style="color:#c09b57; font-size:0.95rem; margin-top:1rem; margin-bottom:0.5rem; grid-column:span 2; border-bottom:1px solid rgba(192,155,87,0.2); padding-bottom:0.3rem;">📦 Medidas y Peso Predeterminado de la Caja de Perfumes</h3>
+          <div class="field-group">
+            <label>Largo (pulgadas - in)</label>
+            <input type="number" id="parcelLength" value="8" step="0.1" required />
+          </div>
+          <div class="field-group">
+            <label>Ancho (pulgadas - in)</label>
+            <input type="number" id="parcelWidth" value="6" step="0.1" required />
+          </div>
+          <div class="field-group">
+            <label>Alto (pulgadas - in)</label>
+            <input type="number" id="parcelHeight" value="4" step="0.1" required />
+          </div>
+          <div class="field-group">
+            <label>Peso por Perfume (libras - lb)</label>
+            <input type="number" id="parcelWeight" value="1.5" step="0.1" required />
+          </div>
+
+          <div class="field-group form-full">
+            <label>Clave API Google Maps Places (Autocompletar Dirección)</label>
+            <input type="text" id="googleMapsKey" value="AIzaSyBPVJ0OhSO_ee1l_6JRaZDB0_9xuFM_FNw" placeholder="AIzaSy..." />
+          </div>
+        </div>
+        <button type="submit" class="btn-submit-gold">Guardar Configuración &amp; Medidas de Envíos &#x2756;</button>
+        <div id="originSaveStatus" class="status-alert"></div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

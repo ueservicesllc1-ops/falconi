@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account — Falconi Parfums</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 1.5rem 3rem 1.5rem;
+      background: radial-gradient(circle at center, rgba(30, 22, 12, 0.9) 0%, rgba(8, 7, 10, 0.98) 100%),
+                  url('assets/hero-bg.png') center/cover no-repeat;
+      position: relative;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(18, 16, 22, 0.85);
+      border: 1px solid var(--border-gold, #3a2e1d);
+      backdrop-filter: blur(16px);
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(192, 155, 87, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-logo {
+      height: 48px;
+      margin-bottom: 1rem;
+    }
+    .auth-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      color: #e6d5b8;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    .auth-subtitle {
+      font-size: 0.85rem;
+      color: #9a8f7c;
+      letter-spacing: 0.5px;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(192, 155, 87, 0.2);
+      padding-bottom: 0.5rem;
+    }
+    .auth-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: #8c8270;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.5rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+    .auth-tab.active {
+      color: #c09b57;
+      border-bottom: 2px solid #c09b57;
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+    .auth-field label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #b3a286;
+      display: flex;
+      justify-content: space-between;
+    }
+    .auth-field input {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(192, 155, 87, 0.25);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      color: #f5f5f5;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    .auth-field input:focus {
+      outline: none;
+      border-color: #c09b57;
+      box-shadow: 0 0 10px rgba(192, 155, 87, 0.2);
+    }
+    .forgot-link {
+      color: #c09b57;
+      font-size: 0.75rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+    .auth-submit-btn {
+      background: linear-gradient(135deg, #c09b57 0%, #9a7632 100%);
+      color: #08070a;
+      border: none;
+      border-radius: 6px;
+      padding: 0.85rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 0.5rem;
+    }
+    .auth-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(192, 155, 87, 0.3);
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.5rem 0;
+      color: #6e6452;
+      font-size: 0.75rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid rgba(192, 155, 87, 0.15);
+    }
+    .auth-divider span {
+      padding: 0 0.75rem;
+    }
+    .auth-google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e6d5b8;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .auth-google-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #c09b57;
+    }
+    .auth-msg {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+    .auth-msg.error {
+      display: block;
+      background: rgba(220, 53, 69, 0.15);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      color: #ff8a8a;
+    }
+    .auth-msg.success {
+      display: block;
+      background: rgba(40, 167, 69, 0.15);
+      border: 1px solid rgba(40, 167, 69, 0.3);
+      color: #75b798;
+    }
+    .back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #c09b57;
+      text-decoration: none;
+      font-size: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-page">
+    <div class="auth-card">
+      <a href="index.html" class="back-home">&larr; Back to Shop</a>
+      <div class="auth-header">
+        <img src="LOGOBLANCO.png" alt="Falconi Parfums" class="auth-logo" />
+        <h1 class="auth-title">Client Portal</h1>
+        <p class="auth-subtitle">Access your exclusive Falconi account</p>
+      </div>
+
+      <div class="auth-tabs" id="authTabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Create Account</button>
+      </div>
+
+      <!-- Main Login / Register / Password Reset Form -->
+      <form class="auth-form" id="authForm">
+        <div class="auth-field" id="nameGroup" style="display: none;">
+          <label for="authName">Full Name</label>
+          <input type="text" id="authName" placeholder="Your full name" />
+        </div>
+
+        <div class="auth-field">
+          <label for="authEmail">Email Address</label>
+          <input type="email" id="authEmail" placeholder="your@email.com" required />
+        </div>
+
+        <div class="auth-field" id="passwordGroup">
+          <label for="authPassword">
+            <span>Password</span>
+            <a class="forgot-link" id="forgotBtn" onclick="switchAuthTab('forgot')">Forgot?</a>
+          </label>
+          <input type="password" id="authPassword" placeholder="••••••••" required />
+        </div>
+
+        <button type="submit" class="auth-submit-btn" id="authSubmitBtn">Sign In &#x2756;</button>
+      </form>
+
+      <div class="auth-divider" id="googleDivider"><span>OR</span></div>
+
+      <button type="button" class="auth-google-btn" id="googleBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.2 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 10.8 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.2-6.4-5.2L1.9 17C3.7 20.7 7.5 24 12 24z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>
