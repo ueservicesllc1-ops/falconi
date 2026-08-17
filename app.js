@@ -910,7 +910,7 @@ function initCustomerLiveChat() {
         </div>
       </div>
 
-      <div style="padding:0.75rem; border-top:1px solid rgba(192,155,87,0.2); display:flex; gap:0.5rem; background:rgba(25,22,30,0.8);">
+      <div id="falconiChatFooter" style="padding:0.75rem; border-top:1px solid rgba(192,155,87,0.2); display:flex; gap:0.5rem; background:rgba(25,22,30,0.8);">
         <input type="text" id="customerMsgInput" placeholder="Type your message..." style="flex:1; background:rgba(12,11,14,0.9); border:1px solid rgba(192,155,87,0.3); padding:0.6rem 0.8rem; border-radius:6px; color:#e6d5b8; font-size:0.82rem; outline:none;" onkeypress="if(event.key==='Enter') sendCustomerMessage()" />
         <button onclick="sendCustomerMessage()" style="background:linear-gradient(135deg, #c09b57 0%, #997836 100%); color:#0c0b0e; border:none; padding:0.6rem 0.9rem; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;">Send</button>
       </div>
@@ -927,6 +927,48 @@ if (!customerChatId) {
   localStorage.setItem('falconiChatId', customerChatId);
 }
 
+const CHAT_INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
+
+window.startNewCustomerChat = function() {
+  customerChatId = 'chat_' + Date.now();
+  localStorage.setItem('falconiChatId', customerChatId);
+  localStorage.removeItem('falconiPendingNameStep');
+  localStorage.removeItem('falconiClientName');
+  localStorage.setItem('falconiLastChatActivity', String(Date.now()));
+
+  const footer = document.getElementById('falconiChatFooter');
+  if (footer) {
+    footer.innerHTML = `
+      <input type="text" id="customerMsgInput" placeholder="Type your message..." style="flex:1; background:rgba(12,11,14,0.9); border:1px solid rgba(192,155,87,0.3); padding:0.6rem 0.8rem; border-radius:6px; color:#e6d5b8; font-size:0.82rem; outline:none;" onkeypress="if(event.key==='Enter') sendCustomerMessage()" />
+      <button onclick="sendCustomerMessage()" style="background:linear-gradient(135deg, #c09b57 0%, #997836 100%); color:#0c0b0e; border:none; padding:0.6rem 0.9rem; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;">Send</button>
+    `;
+  }
+
+  const msgContainer = document.getElementById('customerChatMessages');
+  if (msgContainer) {
+    msgContainer.innerHTML = `<div style="align-self:flex-start; background:rgba(35,30,42,0.9); color:#e6d5b8; border:1px solid rgba(192,155,87,0.2); padding:0.65rem 0.9rem; border-radius:10px; border-bottom-left-radius:2px; max-width:85%;">Welcome to Falconi Parfums. How may our fragrance advisor assist you today?</div>`;
+  }
+
+  prevCustomerMsgCount = 0;
+  initCustomerChatFirebase();
+};
+
+function checkChatInactivity() {
+  const lastActivity = parseInt(localStorage.getItem('falconiLastChatActivity') || '0', 10);
+  if (lastActivity > 0 && (Date.now() - lastActivity > CHAT_INACTIVITY_LIMIT)) {
+    // Disable active input and show closed chat notice
+    const footer = document.getElementById('falconiChatFooter');
+    if (footer) {
+      footer.innerHTML = `
+        <div style="width:100%; text-align:center; padding:0.4rem;">
+          <p style="font-size:0.78rem; color:#e6d5b8; margin:0 0 0.5rem;">⏳ Chat session closed due to 30 minutes of inactivity.</p>
+          <button onclick="startNewCustomerChat()" style="background:linear-gradient(135deg, #c09b57 0%, #997836 100%); color:#0c0b0e; border:none; padding:0.5rem 1.1rem; border-radius:6px; font-weight:bold; font-size:0.8rem; cursor:pointer; width:100%;">💬 Start a New Chat</button>
+        </div>
+      `;
+    }
+  }
+}
+
 window.toggleLiveChatWidget = function() {
   const modal = document.getElementById('falconiChatModal');
   const badge = document.getElementById('customerChatBadge');
@@ -935,10 +977,43 @@ window.toggleLiveChatWidget = function() {
   if (modal.style.display === 'none' || modal.style.display === '') {
     modal.style.display = 'flex';
     if (badge) badge.style.display = 'none';
+    checkChatInactivity();
   } else {
     modal.style.display = 'none';
   }
 };
+
+function playLuxuryChime() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+
+    osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+    osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12); // E5
+
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.25);
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.5);
+  } catch (e) {}
+}
+
+let prevCustomerMsgCount = 0;
 
 async function initCustomerChatFirebase() {
   try {
@@ -950,6 +1025,13 @@ async function initCustomerChatFirebase() {
 
     onSnapshot(q, (snapshot) => {
       if (snapshot.empty) return;
+
+      if (snapshot.docs.length > prevCustomerMsgCount) {
+        if (prevCustomerMsgCount > 0) {
+          playLuxuryChime();
+        }
+        prevCustomerMsgCount = snapshot.docs.length;
+      }
 
       let html = `<div style="align-self:flex-start; background:rgba(35,30,42,0.9); color:#e6d5b8; border:1px solid rgba(192,155,87,0.2); padding:0.65rem 0.9rem; border-radius:10px; border-bottom-left-radius:2px; max-width:85%;">Welcome to Falconi Parfums. How may our fragrance advisor assist you today?</div>`;
 
@@ -978,6 +1060,7 @@ window.sendCustomerMessage = async function() {
   if (!text) return;
 
   input.value = '';
+  localStorage.setItem('falconiLastChatActivity', String(Date.now()));
 
   try {
     const { db, collection, doc, setDoc, addDoc, serverTimestamp, auth } = await import('./firebase/firebase.js');

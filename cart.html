@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Montserrat:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type="text/javascript">
+    (function(){
+      // Initialize EmailJS with Public Key
+      emailjs.init({ publicKey: "R7GYiNWkbClv_yBCt" });
+    })();
+  </script>
 </head>
 <body class="cart-page-body">
 
@@ -153,14 +160,114 @@
 
   <div class="toast" id="toast"><span class="toast-icon">&#x2756;</span><span id="toastMsg"></span></div>
 
+  <!-- ===== ORDER SUCCESS MODAL ===== -->
+  <div id="orderSuccessModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8,7,10,0.85); backdrop-filter:blur(10px); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:linear-gradient(135deg, rgba(28,24,33,0.98) 0%, rgba(18,15,22,0.98) 100%); border:1px solid #c09b57; border-radius:12px; max-width:480px; width:90%; padding:2.5rem 2rem; position:relative; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.8); animation: fadeIn 0.4s ease;">
+      <button onclick="closeSuccessModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#c09b57; font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
+      <div style="font-size:3rem; color:#c09b57; margin-bottom:1rem;">&#x2756;</div>
+      <h2 style="font-family:'Cormorant Garamond', serif; font-size:2rem; color:#e6d5b8; margin-bottom:0.5rem;">¡Gracias por tu compra!</h2>
+      <p style="color:#b3a693; font-size:0.95rem; margin-bottom:1.5rem; line-height:1.5;">Tu pedido ha sido procesado exitosamente. Hemos enviado los detalles de tu compra a tu correo electrónico.</p>
+      <div style="background:rgba(192,155,87,0.1); border:1px dashed #c09b57; padding:0.75rem 1rem; border-radius:6px; font-size:0.9rem; color:#e6d5b8; margin-bottom:1.5rem;">
+        ID de Orden: #<span id="modalOrderNumber" style="font-weight:bold; color:#c09b57;"></span>
+      </div>
+      <p style="font-size:0.8rem; color:#8c8270;">Redirigiendo a la pantalla de inicio en <span id="modalCountdown" style="color:#c09b57; font-weight:bold;">5</span> segundos...</p>
+    </div>
+  </div>
+
   <script>
     let cart = JSON.parse(localStorage.getItem('falconiCart') || '[]');
     let activeStep = 1;
     let shippingStale = false;
+    let redirectTimer = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       renderCartPage();
+
+      // Check if user returned from Stripe Payment Success
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment');
+      const sessionId = urlParams.get('session_id');
+
+      if (paymentStatus === 'success' || paymentStatus === 'success_demo') {
+        const orderId = sessionId ? sessionId.substring(0, 10).toUpperCase() : Math.floor(Math.random() * 900000 + 100000);
+        
+        // Retrieve last order metadata if stored
+        const pendingOrder = JSON.parse(localStorage.getItem('falconiPendingOrder') || '{}');
+        
+        // Send email notifications
+        sendOrderEmailNotifications(pendingOrder, orderId);
+
+        // Clear cart and pending order
+        cart = [];
+        localStorage.setItem('falconiCart', JSON.stringify(cart));
+        localStorage.removeItem('falconiPendingOrder');
+        renderCartPage();
+
+        // Show Success Modal
+        showSuccessModal(orderId);
+      }
     });
+
+    function showSuccessModal(orderId) {
+      const modal = document.getElementById('orderSuccessModal');
+      const orderNumSpan = document.getElementById('modalOrderNumber');
+      const countdownSpan = document.getElementById('modalCountdown');
+
+      if (orderNumSpan) orderNumSpan.textContent = orderId;
+      if (modal) modal.style.display = 'flex';
+
+      let seconds = 5;
+      if (countdownSpan) countdownSpan.textContent = seconds;
+
+      redirectTimer = setInterval(() => {
+        seconds--;
+        if (countdownSpan) countdownSpan.textContent = seconds;
+        if (seconds <= 0) {
+          closeSuccessModal();
+        }
+      }, 1000);
+    }
+
+    function closeSuccessModal() {
+      if (redirectTimer) clearInterval(redirectTimer);
+      const modal = document.getElementById('orderSuccessModal');
+      if (modal) modal.style.display = 'none';
+      window.location.href = 'index.html';
+    }
+
+    async function sendOrderEmailNotifications(orderData, orderId) {
+      try {
+        const customerEmail = orderData.customerEmail || 'cliente@falconiparfums.com';
+        const customerName = orderData.customerName || 'Cliente Falconi';
+        const totalAmount = orderData.totalAmount ? `$${orderData.totalAmount.toFixed(2)}` : 'Ver detalles';
+        const itemsList = orderData.items ? orderData.items.map(i => `${i.name} (x${i.qty || 1})`).join(', ') : 'Perfumes Falconi';
+        const adminEmail = 'ueservicesllc1@gmail.com';
+
+        // 1. Send Confirmation Email to Customer
+        emailjs.send('service_jjfd8me', 'template_zkziz38', {
+          to_email: customerEmail,
+          to_name: customerName,
+          order_id: orderId,
+          total_amount: totalAmount,
+          items_summary: itemsList
+        }).then(() => console.log('✓ Customer email notification sent.'))
+          .catch(err => console.log('Customer EmailJS notice:', err));
+
+        // 2. Send Notification Email to Admin
+        emailjs.send('service_jjfd8me', 'template_wkneyln', {
+          to_email: adminEmail,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          order_id: orderId,
+          total_amount: totalAmount,
+          items_summary: itemsList
+        }).then(() => console.log('✓ Admin email notification sent.'))
+          .catch(err => console.log('Admin EmailJS notice:', err));
+
+      } catch (err) {
+        console.error('EmailJS error:', err);
+      }
+    }
 
     function markShippingStale() {
       shippingStale = true;
@@ -304,7 +411,7 @@
       };
 
       try {
-        const res = await fetch('http://localhost:4000/api/shippo/rates', {
+        const res = await fetch('/api/shippo/rates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ addressTo, addressFrom: savedOrigin || undefined, parcel })
@@ -422,37 +529,46 @@
 
         const docRef = await addDoc(collection(db, 'orders'), orderData);
 
+        // Store pending order metadata for email dispatch on redirect return
+        localStorage.setItem('falconiPendingOrder', JSON.stringify({
+          orderId: docRef.id,
+          customerName: name,
+          customerEmail: email,
+          items: cart,
+          totalAmount
+        }));
+
         // Attempt Stripe Checkout Call
-        const res = await fetch('http://localhost:4000/api/stripe/create-checkout-session', {
+        const res = await fetch('/api/stripe/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items: cart, customerEmail: email })
         });
         const data = await res.json();
 
-        // Clear cart
-        cart = [];
-        localStorage.setItem('falconiCart', JSON.stringify(cart));
-
         if (data.success && data.url && !data.demoMode) {
           window.location.href = data.url;
         } else {
-          // Display Success
-          document.getElementById('flowOrderNumber').textContent = docRef.id.substring(0, 8).toUpperCase();
-          document.querySelectorAll('.flow-content').forEach(el => el.classList.remove('active'));
-          document.getElementById('flowContentSuccess').classList.add('active');
-          document.getElementById('summarySubtotal').textContent = '$0.00';
-          document.getElementById('summaryShipping').textContent = '$0.00';
+          // Send email notifications
+          sendOrderEmailNotifications(orderData, docRef.id.substring(0, 8).toUpperCase());
+
+          // Clear cart
+          cart = [];
+          localStorage.setItem('falconiCart', JSON.stringify(cart));
+          localStorage.removeItem('falconiPendingOrder');
+          renderCartPage();
+
+          // Show Success Modal
+          showSuccessModal(docRef.id.substring(0, 8).toUpperCase());
         }
       } catch (err) {
         console.error('Order submission error:', err);
-        // Fallback display
         const orderNum = Math.floor(Math.random() * 900000) + 100000;
-        document.getElementById('flowOrderNumber').textContent = orderNum;
         cart = [];
         localStorage.setItem('falconiCart', JSON.stringify(cart));
-        document.querySelectorAll('.flow-content').forEach(el => el.classList.remove('active'));
-        document.getElementById('flowContentSuccess').classList.add('active');
+        localStorage.removeItem('falconiPendingOrder');
+        renderCartPage();
+        showSuccessModal(orderNum);
       }
     }
 

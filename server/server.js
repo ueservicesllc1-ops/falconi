@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const multer = require('multer');
 const { 
   S3Client, 
@@ -12,10 +13,19 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
+const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 app.use(cors());
+
+// Raw body required for Stripe webhook signature verification (before express.json)
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
+
+// Serve frontend static files from parent directory
+app.use(express.static(path.join(__dirname, '..')));
 
 // Initialize Backblaze B2 S3 Client
 const s3Client = new S3Client({
@@ -31,11 +41,12 @@ const s3Client = new S3Client({
 const BUCKET_NAME = process.env.B2_BUCKET || 'falconi';
 const SHIPPO_TOKEN = process.env.SHIPPO_API_TOKEN;
 
-// Initialize Stripe (optional test mode if key provided)
+// Initialize Stripe
 let stripe = null;
 if (process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.includes('PlaceHolder')) {
   try {
     stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    console.log('✦ Stripe initialized successfully');
   } catch (e) {
     console.log('Stripe init notice:', e.message);
   }
@@ -307,8 +318,9 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
           currency: 'usd',
           product_data: {
             name: item.name,
-            images: item.image ? [item.image] : [],
-            description: item.tagline || item.description || 'Falconi Parfums Luxury Item'
+            // Only pass absolute URLs to Stripe (relative paths won't work)
+            images: item.image && item.image.startsWith('http') ? [item.image] : [],
+            description: item.tagline || item.description || 'Falconi Parfums Luxury Fragrance'
           },
           unit_amount: Math.round(finalPrice * 100) // cents
         },
@@ -322,20 +334,21 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
         line_items: lineItems,
         mode: 'payment',
         customer_email: customerEmail || undefined,
-        success_url: `http://localhost:3000/cart.html?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `http://localhost:3000/cart.html?payment=cancelled`
+        success_url: `${SITE_URL}/cart.html?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${SITE_URL}/cart.html?payment=cancelled`,
+        metadata: { source: 'falconi_parfums' }
       });
 
       return res.json({ success: true, url: session.url, sessionId: session.id });
     } else {
-      // Demo fallback checkout link
+      // Demo fallback
       const totalAmount = lineItems.reduce((acc, item) => acc + (item.price_data.unit_amount * item.quantity), 0) / 100;
       return res.json({
         success: true,
         demoMode: true,
-        message: 'Stripe Test Mode Activated',
+        message: 'Stripe Demo Mode',
         totalAmount,
-        url: `http://localhost:3000/cart.html?payment=success_demo&amount=${totalAmount}`
+        url: `${SITE_URL}/cart.html?payment=success_demo&amount=${totalAmount}`
       });
     }
   } catch (error) {
@@ -344,7 +357,52 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
   }
 });
 
+/* =========================================================
+   STRIPE WEBHOOK HANDLER
+   ========================================================= */
+app.post('/api/stripe/webhook', async (req, res) => {
+  if (!stripe || !STRIPE_WEBHOOK_SECRET) {
+    return res.json({ received: true });
+  }
+
+  let event;
+  try {
+    const sig = req.headers['stripe-signature'];
+    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature error:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      console.log(`✦ Payment confirmed: ${session.id} — ${session.customer_email} — $${(session.amount_total / 100).toFixed(2)}`);
+      break;
+    }
+    case 'payment_intent.payment_failed': {
+      const intent = event.data.object;
+      console.log(`✦ Payment failed: ${intent.id}`);
+      break;
+    }
+    default:
+      console.log(`Stripe event: ${event.type}`);
+  }
+
+  res.json({ received: true });
+});
+
+/* =========================================================
+   FALLBACK — SPA (serve index.html for any unmatched route)
+   ========================================================= */
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
 app.listen(PORT, () => {
-  console.log(`✦ Falconi Backend (B2, Shippo, Stripe) running on http://localhost:${PORT}`);
-  console.log(`✦ Shippo API connected: token active`);
+  console.log(`✦ Falconi Parfums server running → http://localhost:${PORT}`);
+  console.log(`✦ Production URL: ${SITE_URL}`);
+  console.log(`✦ Stripe: ${stripe ? 'ACTIVE (test mode)' : 'not configured'}`);
+  console.log(`✦ Shippo: ${SHIPPO_TOKEN ? 'ACTIVE' : 'not configured'}`);
+  console.log(`✦ Webhook: ${STRIPE_WEBHOOK_SECRET ? 'configured' : 'not set'}`);
 });

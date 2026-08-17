@@ -141,6 +141,38 @@ function listenToChats() {
   });
 }
 
+function playNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+
+    osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+    osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.25);
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.5);
+  } catch (e) {}
+}
+
+let prevAdvisorMsgCount = 0;
+
 // SELECT AN ACTIVE CHAT
 window.selectAdvisorChat = function(chatId, name, email) {
   selectedChatId = chatId;
@@ -156,11 +188,21 @@ window.selectAdvisorChat = function(chatId, name, email) {
   // Unsubscribe previous messages listener
   if (unsubscribeMessages) unsubscribeMessages();
 
+  // Reset count tracker
+  prevAdvisorMsgCount = 0;
+
   // Listen to messages subcollection for selected chat
   const msgContainer = document.getElementById("activeChatMessages");
   const qMsg = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
 
   unsubscribeMessages = onSnapshot(qMsg, (snapshot) => {
+    if (snapshot.docs.length > prevAdvisorMsgCount) {
+      if (prevAdvisorMsgCount > 0) {
+        playNotificationSound();
+      }
+      prevAdvisorMsgCount = snapshot.docs.length;
+    }
+
     let msgHtml = "";
     snapshot.forEach(docSnap => {
       const m = docSnap.data();

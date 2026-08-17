@@ -14,7 +14,7 @@ import {
   deleteB2Media
 } from "./firebase/firebase.js";
 
-const BACKEND_URL = "http://localhost:4000";
+const BACKEND_URL = window.location.origin;
 
 // Global Modal Handlers
 window.openAdminModal = function(modalId) {

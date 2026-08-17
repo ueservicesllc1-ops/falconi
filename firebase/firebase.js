@@ -52,7 +52,7 @@ try {
 }
 
 // Proxy Server Config (Backblaze B2)
-const B2_PROXY_URL = "http://localhost:4000/api/media";
+const B2_PROXY_URL = "/api/media";
 
 // Helper: Upload file to Backblaze B2 via Proxy
 export async function uploadMediaToB2(file, folder = "products") {
