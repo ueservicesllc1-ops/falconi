@@ -299,9 +299,10 @@ input, select, textarea { font-family: inherit; }
    ========================================================= */
 .hero {
   position: relative;
-  height: 100vh;
-  min-height: 700px;
-  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -362,15 +363,6 @@ input, select, textarea { font-family: inherit; }
   display: block;
 }
 /* === HERO LAYOUT === */
-.hero {
-  position: relative;
-  height: 100vh;
-  min-height: 700px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  overflow: hidden;
-}
-/* Left half: logo + text centered inside */
 .hero-left {
   position: relative;
   z-index: 2;
@@ -382,9 +374,10 @@ input, select, textarea { font-family: inherit; }
   padding: 2rem 3rem;
   gap: 1rem;
   animation: fadeInUp 1s ease 0.2s both;
-  margin-left: 200px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 650px;
 }
-/* Right half: empty, shows banner image */
 .hero-right {
   position: relative;
   z-index: 2;
@@ -2092,19 +2085,37 @@ input, select, textarea { font-family: inherit; }
   .form-grid .form-group.full { grid-column: auto; }
   .search-bar.open { padding: 1rem 1.25rem; }
   .hero {
-    grid-template-columns: 1fr;
-    padding: 7rem 1.5rem 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    height: auto;
+    padding: 6.5rem 1.25rem 4rem;
     text-align: center;
   }
   .hero-right { display: none; }
   .hero-left {
     width: 100%;
+    max-width: 100%;
+    margin: 0 auto !important;
     padding: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
   }
-  .hero-logo-img { width: 180px; }
+  .hero-logo-img {
+    width: 220px;
+    max-width: 80%;
+    height: auto;
+    margin: 0 auto 0.5rem auto;
+  }
+  .hero-bg {
+    background-position: center center;
+    background-size: cover;
+  }
 }
 
 @media (max-width: 768px) {
