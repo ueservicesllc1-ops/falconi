@@ -80,6 +80,27 @@
     .pin-card h3 { font-family: 'Playfair Display', serif; color: #c09b57; margin-bottom: 0.5rem; font-size: 1.5rem; }
     .pin-card p { font-size: 0.82rem; color: #8c8270; margin-bottom: 1.5rem; }
     .pin-input { width: 100%; text-align: center; font-size: 1.6rem; letter-spacing: 8px; padding: 0.6rem; background: rgba(12,11,14,0.9); border: 1px solid rgba(192, 155, 87, 0.4); border-radius: 6px; color: #c09b57; margin-bottom: 1.2rem; outline: none; }
+
+    /* Mobile Responsive Overrides */
+    @media (max-width: 850px) {
+      .asesor-layout { flex-direction: column; }
+      .asesor-sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid rgba(192, 155, 87, 0.25);
+      }
+      .sidebar-menu { display: flex; overflow-x: auto; padding: 0.5rem; }
+      .sidebar-item { padding: 0.6rem 0.9rem; font-size: 0.8rem; border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; }
+      .sidebar-item:hover, .sidebar-item.active { border-left-color: transparent; border-bottom-color: #c09b57; }
+      .sidebar-footer { display: none; }
+      .asesor-main { margin-left: 0; padding: 1rem; }
+      .chat-inbox-grid { grid-template-columns: 1fr; height: auto; gap: 1rem; }
+      .chats-list-panel { max-height: 250px; }
+      .active-chat-panel { height: 500px; }
+      .pin-card { width: 92vw; padding: 1.75rem 1.25rem; }
+    }
   </style>
 </head>
 <body class="asesor-body">

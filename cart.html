@@ -21,6 +21,9 @@
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar scrolled" id="navbar">
     <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <img src="logo-transparent.png" alt="Falconi Parfums" class="logo-img" />
+      </a>
       <ul class="nav-links" id="navLinks">
         <li><a href="index.html#home" class="nav-link">Home</a></li>
         <li><a href="index.html#coleccion" class="nav-link">Collection</a></li>
@@ -29,9 +32,12 @@
         <li><a href="index.html#contacto" class="nav-link">Contact</a></li>
       </ul>
       <div class="nav-actions">
-        <a href="index.html#coleccion" class="nav-search" aria-label="Back to Shop">
+        <a href="index.html#coleccion" class="nav-search" aria-label="Back to Shop" title="Back to Shop">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </a>
+        <button class="nav-toggle" id="navToggle" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
   </nav>
@@ -657,6 +663,19 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       initAddressEngine();
+      const navToggle = document.getElementById('navToggle');
+      const navLinks = document.getElementById('navLinks');
+      if (navToggle && navLinks) {
+        navToggle.addEventListener('click', () => {
+          navLinks.classList.toggle('open');
+          const spans = navToggle.querySelectorAll('span');
+          if (spans.length >= 3) {
+            navLinks.classList.contains('open')
+              ? (spans[0].style.transform = 'translateY(6px) rotate(45deg)', spans[1].style.opacity = '0', spans[2].style.transform = 'translateY(-6px) rotate(-45deg)')
+              : (spans[0].style.transform = '', spans[1].style.opacity = '', spans[2].style.transform = '');
+          }
+        });
+      }
     });
   </script>
 </body>
