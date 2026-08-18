@@ -346,6 +346,7 @@ async function loadFirestoreProductsToStore() {
         price: Number(p.price) || 0,
         image: p.image || "assets/oud-noir.png",
         sizes: p.sizes || ["50ml", "100ml"],
+        stock: p.stock !== undefined ? Number(p.stock) : 15,
         notes: p.notes || [],
         description: p.description || ""
       };
@@ -621,12 +622,28 @@ function openQuickView(productId) {
   notesGrid.innerHTML = p.notes.map(n => `<span class="note-tag">${n}</span>`).join('');
 
   const sizesDiv = document.getElementById('qvSizes');
-  sizesDiv.innerHTML = p.sizes.map((s, i) =>
-    `<button class="size-btn ${i === p.sizes.length - 1 ? 'active' : ''}" onclick="selectSize(this)">${s}</button>`
+  const validSizes = p.sizes && p.sizes.length > 0 ? p.sizes : ["100ml"];
+  sizesDiv.innerHTML = validSizes.map((s, i) =>
+    `<button class="size-btn ${i === validSizes.length - 1 ? 'active' : ''}" onclick="selectSize(this)">${s}</button>`
   ).join('');
 
+  // Render stock status (Cantidad en existencia)
+  const stock = p.stock !== undefined ? p.stock : 15;
+  const stockEl = document.getElementById('qvStock');
+  const addBtn = document.getElementById('qvAddBtn');
+  if (stockEl) {
+    if (stock > 0) {
+      stockEl.innerHTML = `<span style="color:#75b798; font-weight:600;">✓ Cantidad en existencia: <strong style="color:#e6d5b8;">${stock} unidades</strong></span>`;
+      if (addBtn) { addBtn.disabled = false; addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; }
+    } else {
+      stockEl.innerHTML = `<span style="color:#ff8a8a; font-weight:600;">⚠️ Agotado (Sin existencia en inventario)</span>`;
+      if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '0.5'; addBtn.style.cursor = 'not-allowed'; }
+    }
+  }
+
   document.getElementById('qvAddBtn').onclick = () => {
-    const size = document.querySelector('.size-btn.active')?.textContent || p.sizes[0];
+    if (stock <= 0) return;
+    const size = document.querySelector('.size-btn.active')?.textContent || validSizes[0];
     for (let i = 0; i < qvQty; i++) {
       addToCart({ id: p.id, name: p.name, price: p.price, image: p.image, size });
     }

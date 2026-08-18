@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Product Creation with % Discount Field
+  // Product Creation with % Discount, Stock and Sizes Selection
   if (productForm) {
     productForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -162,6 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const discountVal = parseFloat(document.getElementById("pDiscount").value) || 0;
         const basePrice = parseFloat(document.getElementById("pPrice").value);
+        const stockVal = parseInt(document.getElementById("pStock")?.value) || 15;
+
+        // Extract selected size checkboxes
+        const selectedSizes = [];
+        if (document.getElementById("pSize30")?.checked) selectedSizes.push("30ml");
+        if (document.getElementById("pSize50")?.checked) selectedSizes.push("50ml");
+        if (document.getElementById("pSize100")?.checked) selectedSizes.push("100ml");
+        const sizesArray = selectedSizes.length > 0 ? selectedSizes : ["100ml"];
 
         const newProduct = {
           name: document.getElementById("pName").value.trim(),
@@ -169,15 +177,16 @@ document.addEventListener("DOMContentLoaded", () => {
           price: basePrice,
           discountPercent: discountVal,
           finalPrice: discountVal > 0 ? basePrice * (1 - discountVal / 100) : basePrice,
+          stock: stockVal,
+          sizes: sizesArray,
           image: document.getElementById("pImage").value.trim(),
           notes: document.getElementById("pNotes").value.split(",").map(n => n.trim()),
           description: document.getElementById("pDesc").value.trim(),
-          sizes: ["30ml", "50ml", "100ml"],
           createdAt: serverTimestamp()
         };
 
         await addDoc(collection(db, "products"), newProduct);
-        statusDiv.textContent = "✓ ¡Producto guardado exitosamente en Firestore!";
+        statusDiv.textContent = "✓ ¡Producto guardado exitosamente con stock y tamaños seleccionados!";
         statusDiv.style.background = "rgba(40,167,69,0.2)";
         statusDiv.style.color = "#75b798";
         productForm.reset();
@@ -191,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Load Firestore Products Catalog
+// Load Firestore Products Catalog with Stock & Sizes Management
 async function loadCatalog() {
   const grid = document.getElementById("firestoreCatalogGrid");
   if (!grid) return;
@@ -207,6 +216,8 @@ async function loadCatalog() {
     snap.forEach(docSnap => {
       const p = docSnap.data();
       const hasDiscount = p.discountPercent && p.discountPercent > 0;
+      const currentStock = p.stock !== undefined ? p.stock : 15;
+      const sizeList = p.sizes && Array.isArray(p.sizes) ? p.sizes.join(" · ") : "50ml · 100ml";
 
       const card = document.createElement("div");
       card.style.background = "rgba(255,255,255,0.03)";
@@ -214,18 +225,29 @@ async function loadCatalog() {
       card.style.borderRadius = "8px";
       card.style.padding = "0.75rem";
       card.style.position = "relative";
+      card.style.display = "flex";
+      card.style.flexDirection = "column";
 
       card.innerHTML = `
         ${hasDiscount ? `<span style="position:absolute; top:8px; right:8px; background:#dc3545; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:700;">-${p.discountPercent}% OFF</span>` : ''}
         <img src="${p.image}" alt="${p.name}" style="width:100%; height:120px; object-fit:cover; border-radius:6px;" />
         <h4 style="color:#c09b57; font-size:0.9rem; margin:0.5rem 0 0.2rem 0;">${p.name}</h4>
-        <div style="font-size:0.8rem;">
+        <div style="font-size:0.8rem; margin-bottom:0.3rem;">
           ${hasDiscount 
             ? `<span style="text-decoration:line-through; color:#8c8270;">$${p.price.toFixed(2)}</span> <strong style="color:#75b798;">$${(p.price * (1 - p.discountPercent/100)).toFixed(2)}</strong>`
             : `<strong>$${p.price.toFixed(2)}</strong>`
           }
         </div>
-        <button style="margin-top:0.5rem; background:rgba(220,53,69,0.2); border:1px solid #dc3545; color:#ff8a8a; font-size:0.7rem; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;" onclick="deleteProduct('${docSnap.id}')">Eliminar</button>
+        <div style="font-size:0.72rem; color:#8c8270; margin-bottom:0.5rem;">📏 Tamaños: <strong style="color:#e6d5b8;">${sizeList}</strong></div>
+        
+        <div style="margin-top:auto; padding-top:0.5rem; border-top:1px solid rgba(192,155,87,0.15); display:flex; flex-direction:column; gap:0.4rem;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.3rem;">
+            <label style="font-size:0.7rem; color:#c09b57; text-transform:uppercase;">Stock:</label>
+            <input type="number" id="stock_input_${docSnap.id}" value="${currentStock}" min="0" style="width:60px; padding:2px 6px; background:rgba(0,0,0,0.6); border:1px solid #c09b57; color:#fff; border-radius:4px; font-size:0.8rem; text-align:center;" />
+            <button style="background:#c09b57; color:#000; font-size:0.65rem; font-weight:700; padding:4px 6px; border:none; border-radius:4px; cursor:pointer;" onclick="updateProductStock('${docSnap.id}')">Guardar</button>
+          </div>
+          <button style="width:100%; background:rgba(220,53,69,0.2); border:1px solid #dc3545; color:#ff8a8a; font-size:0.7rem; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;" onclick="deleteProduct('${docSnap.id}')">Eliminar Producto</button>
+        </div>
       `;
       grid.appendChild(card);
     });
@@ -233,6 +255,24 @@ async function loadCatalog() {
     grid.innerHTML = `<p style="color:#ff8a8a;">Error al cargar catálogo: ${err.message}</p>`;
   }
 }
+
+// Inline Stock Update Helper
+window.updateProductStock = async function(id) {
+  const stockInput = document.getElementById(`stock_input_${id}`);
+  if (!stockInput) return;
+  const newStock = parseInt(stockInput.value);
+  if (isNaN(newStock) || newStock < 0) {
+    alert("Por favor ingresa una cantidad válida de stock (0 o mayor).");
+    return;
+  }
+  try {
+    await updateDoc(doc(db, "products", id), { stock: newStock });
+    alert("✓ Stock actualizado correctamente en Firestore.");
+    loadCatalog();
+  } catch (err) {
+    alert(`Error al actualizar stock: ${err.message}`);
+  }
+};
 
 window.deleteProduct = async function(id) {
   if (!confirm("¿Eliminar este producto de Firestore?")) return;

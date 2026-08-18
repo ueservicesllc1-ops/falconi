@@ -506,6 +506,25 @@
             <label>Descuento en % (Casillero Opcional)</label>
             <input type="number" id="pDiscount" min="0" max="100" placeholder="e.g. 15 (para 15% desc)" />
           </div>
+          <div class="field-group">
+            <label>Cantidad en Existencia / Stock (Unidades)</label>
+            <input type="number" id="pStock" min="0" value="15" placeholder="e.g. 20" required />
+          </div>
+          <div class="field-group form-full">
+            <label>Tamaños Disponibles (ml)</label>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.3rem; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid rgba(192, 155, 87, 0.2); flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: #e6d5b8; font-size: 0.85rem; text-transform: none;">
+                <input type="checkbox" id="pSize30" value="30ml" style="accent-color: #c09b57; width: 16px; height: 16px;" /> 30 ml
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: #e6d5b8; font-size: 0.85rem; text-transform: none;">
+                <input type="checkbox" id="pSize50" value="50ml" style="accent-color: #c09b57; width: 16px; height: 16px;" checked /> 50 ml
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: #e6d5b8; font-size: 0.85rem; text-transform: none;">
+                <input type="checkbox" id="pSize100" value="100ml" style="accent-color: #c09b57; width: 16px; height: 16px;" checked /> 100 ml
+              </label>
+            </div>
+            <span style="font-size: 0.72rem; color: #8c8270; margin-top: 0.2rem;">Selecciona únicamente los tamaños en que estará disponible el producto (ej. si marcas solo 100ml, únicamente se mostrará 100ml al cliente).</span>
+          </div>
           <div class="field-group form-full">
             <label>1 Foto del Producto (Subir a B2 o URL)</label>
             <div style="display:flex; gap:0.5rem;">
