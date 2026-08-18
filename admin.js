@@ -13,7 +13,11 @@ import {
   serverTimestamp,
   uploadMediaToB2,
   listB2Media,
-  deleteB2Media
+  deleteB2Media,
+  query,
+  where,
+  orderBy,
+  onSnapshot
 } from "./firebase/firebase.js";
 
 const BACKEND_URL = window.location.origin;
@@ -30,6 +34,7 @@ window.openAdminModal = function(modalId) {
     if (modalId === "modalAnalytics") loadAnalytics();
     if (modalId === "modalDiscounts") loadDiscountsOverview();
     if (modalId === "modalClients") loadClients();
+    if (modalId === "modalContacts") loadContactsRealtime();
   }
 };
 
@@ -61,12 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (enteredPin === "1619") {
         sessionStorage.setItem("falconiAdminPin", "1619");
         if (adminBadge) adminBadge.textContent = user.email;
+        loadContactsRealtime();
       } else {
         alert("PIN incorrecto.");
         window.location.href = "index.html";
       }
     } else {
       if (adminBadge) adminBadge.textContent = user.email;
+      loadContactsRealtime();
     }
   });
 
@@ -597,3 +604,130 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// ===== CONTACTS MESSAGES SYSTEM =====
+let contactsUnsubscribe = null;
+
+window.loadContactsRealtime = function() {
+  if (contactsUnsubscribe) contactsUnsubscribe();
+  
+  const q = query(collection(db, "contacts"), orderBy("createdAt", "desc"));
+  contactsUnsubscribe = onSnapshot(q, (snapshot) => {
+    const contacts = [];
+    let unreadCount = 0;
+    snapshot.forEach((docSnap) => {
+      const c = docSnap.data();
+      contacts.push({ id: docSnap.id, ...c });
+      if (!c.read) unreadCount++;
+    });
+    
+    // Update unread count indicator in the admin menu button
+    const tag = document.getElementById("contactsUnreadTag");
+    if (tag) {
+      tag.innerHTML = unreadCount > 0 
+        ? `<span style="background:#dc3545; color:white; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold; margin-right:5px;">${unreadCount} NUEVOS</span> Ver Mensajes &rarr;` 
+        : "Ver Mensajes &rarr;";
+    }
+
+    // Toggle unread animation class on the dashboard card
+    const cardEl = document.getElementById("btnContactsCard");
+    if (cardEl) {
+      if (unreadCount > 0) {
+        cardEl.classList.add("has-unread");
+      } else {
+        cardEl.classList.remove("has-unread");
+      }
+    }
+    
+    const tableBody = document.getElementById("contactsTableBody");
+    if (!tableBody) return;
+    
+    if (contacts.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#8c8270; padding:2rem;">No hay consultas de contacto recibidas.</td></tr>`;
+      return;
+    }
+    
+    tableBody.innerHTML = contacts.map((c) => {
+      const dateText = c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleString() : 'Reciente';
+      return `
+        <tr style="${!c.read ? 'background:rgba(192,155,87,0.03); font-weight:500;' : ''}">
+          <td style="white-space:nowrap; font-size:0.8rem; color:#c09b57;">${dateText}</td>
+          <td><strong style="color:#e6d5b8;">${c.name}</strong></td>
+          <td><a href="mailto:${c.email}" style="color:#c09b57; text-decoration:underline;">${c.email}</a></td>
+          <td><span style="color:#e6d5b8; font-weight:600;">${c.subject || 'Sin Asunto'}</span></td>
+          <td>
+            <button onclick="viewFullContactMessage('${c.id}')" class="btn-action-ghost" style="padding:0.25rem 0.6rem; font-size:0.72rem; border-color:#c09b57; color:#e6d5b8;">
+              Ver Mensaje
+            </button>
+          </td>
+          <td style="white-space:nowrap;">
+            <div style="display:flex; gap:0.5rem;">
+              <button onclick="toggleContactRead('${c.id}', ${c.read})" class="btn-action-ghost" style="padding:0.25rem 0.5rem; font-size:0.72rem;">
+                ${c.read ? 'Marcar No Leído' : 'Marcar Leído'}
+              </button>
+              <button onclick="deleteContactMsg('${c.id}')" class="btn-action-ghost" style="padding:0.25rem 0.5rem; font-size:0.72rem; border-color:#dc3545; color:#ff8a8a; background:rgba(220,53,69,0.05);">
+                Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  });
+};
+
+window.viewFullContactMessage = async function(id) {
+  try {
+    const docRef = doc(db, "contacts", id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return;
+    const c = docSnap.data();
+
+    // Mark as read automatically when opened
+    if (!c.read) {
+      await updateDoc(docRef, { read: true });
+    }
+
+    const dateText = c.createdAt ? new Date(c.createdAt.seconds * 1000).toLocaleString() : 'Reciente';
+    document.getElementById("detailContactDate").textContent = dateText;
+    document.getElementById("detailContactName").textContent = c.name || "";
+    
+    const emailLink = document.getElementById("detailContactEmail");
+    emailLink.textContent = c.email || "";
+    emailLink.href = "mailto:" + (c.email || "");
+
+    document.getElementById("detailContactSubject").textContent = c.subject || "Sin Asunto";
+    document.getElementById("detailContactMessage").textContent = c.message || "";
+
+    const markReadBtn = document.getElementById("detailContactMarkReadBtn");
+    if (markReadBtn) {
+      markReadBtn.onclick = async () => {
+        await toggleContactRead(id, true);
+        closeAdminModal('modalViewContactDetail');
+      };
+    }
+
+    openAdminModal("modalViewContactDetail");
+  } catch (err) {
+    alert("Error al cargar mensaje: " + err.message);
+  }
+};
+
+window.toggleContactRead = async function(id, currentReadState) {
+  try {
+    await updateDoc(doc(db, "contacts", id), {
+      read: !currentReadState
+    });
+  } catch (err) {
+    alert("Error al cambiar estado: " + err.message);
+  }
+};
+
+window.deleteContactMsg = async function(id) {
+  if (!confirm("¿Seguro que deseas eliminar este mensaje?")) return;
+  try {
+    await deleteDoc(doc(db, "contacts", id));
+  } catch (err) {
+    alert("Error al eliminar mensaje: " + err.message);
+  }
+};

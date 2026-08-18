@@ -22,7 +22,7 @@
   <nav class="navbar scrolled" id="navbar">
     <div class="nav-container">
       <a href="index.html" class="nav-logo">
-        <img src="logo-transparent.png" alt="Falconi Parfums" class="logo-img" />
+        <img src="LOGOBLANCO.png" alt="Falconi Parfums" class="logo-img" />
       </a>
       <ul class="nav-links" id="navLinks">
         <li><a href="index.html#home" class="nav-link">Home</a></li>
@@ -73,7 +73,7 @@
         <div class="inline-checkout-flow">
           <div class="flow-steps-header">
             <span class="flow-step active" id="flowStep1">1. Address &amp; Contact</span>
-            <span class="flow-step" id="flowStep2">2. Shipping Options (Shippo API)</span>
+            <span class="flow-step" id="flowStep2">2. Shipping Options</span>
             <span class="flow-step" id="flowStep3">3. Payment (Stripe)</span>
           </div>
 
@@ -100,7 +100,7 @@
               </div>
               <div class="form-group"><label>Postal Code (ZIP)</label><input type="text" id="flowPostal" placeholder="00000" required /></div>
             </div>
-            <button class="btn-primary full-width next-btn" onclick="fetchLiveShippoRates()">Calculate Shipping Rates (Shippo API) &rarr;</button>
+            <button class="btn-primary full-width next-btn" onclick="fetchLiveShippoRates()">Calculate Shipping Rates &rarr;</button>
           </div>
 
           <!-- Step 2: Live Shippo Shipping Options -->
@@ -108,7 +108,7 @@
             <div class="form-grid">
               <div class="form-group full">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
-                  <label style="margin:0;">Available Live Shipping Rates (Shippo API)</label>
+                  <label style="margin:0;">Available Live Shipping Rates</label>
                   <button type="button" onclick="fetchLiveShippoRates()" style="background:rgba(192,155,87,0.15); border:1px solid #c09b57; color:#e6d5b8; padding:0.35rem 0.75rem; border-radius:4px; font-size:0.75rem; cursor:pointer; font-weight:600;">🔄 Recalculate Shipping</button>
                 </div>
                 <div id="shippoLiveRatesContainer" class="shipping-options">
@@ -281,7 +281,7 @@
       const payBtn = document.getElementById('btnContinueToPayment');
       if (notice) notice.style.display = 'block';
       if (payBtn) {
-        payBtn.innerHTML = '🔄 Recalculate Shipping (Shippo) &rarr;';
+        payBtn.innerHTML = '🔄 Recalculate Shipping &rarr;';
         payBtn.style.background = 'linear-gradient(135deg, #c09b57 0%, #997836 100%)';
       }
     }
@@ -451,11 +451,11 @@
           container.innerHTML = `
             <label class="shipping-option">
               <input type="radio" name="flowShippingOpt" value="12.50" checked onchange="updateFlowShipping(12.50)" />
-              <div class="shipping-info"><span>Standard Shipping (Shippo API)</span><span>$12.50</span></div>
+              <div class="shipping-info"><span>Standard Shipping</span><span>$12.50</span></div>
             </label>
             <label class="shipping-option">
               <input type="radio" name="flowShippingOpt" value="28.00" onchange="updateFlowShipping(28.00)" />
-              <div class="shipping-info"><span>Express Premium (Shippo API)</span><span>$28.00</span></div>
+              <div class="shipping-info"><span>Express Premium</span><span>$28.00</span></div>
             </label>
           `;
           updateFlowShipping(12.50);

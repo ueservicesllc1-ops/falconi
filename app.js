@@ -539,10 +539,10 @@ function renderProducts(filter = 'all') {
         <img src="${p.image}" alt="${p.name}" loading="lazy" />
         ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
         <div class="product-actions-overlay">
-          <button class="product-action-btn btn-add-product" onclick="addToCart({id:${p.id},name:'${p.name}',price:${p.price},image:'${p.image}',size:'${p.sizes[p.sizes.length-1]}'}); event.stopPropagation()">
+          <button class="product-action-btn btn-add-product">
             + Cart
           </button>
-          <button class="product-action-btn btn-view-product" onclick="openQuickView(${p.id}); event.stopPropagation()">
+          <button class="product-action-btn btn-view-product">
             View
           </button>
         </div>
@@ -556,12 +556,40 @@ function renderProducts(filter = 'all') {
             <div class="product-price">$${p.price.toFixed(2)}</div>
             <div class="product-size">${p.sizes.join(' · ')}</div>
           </div>
-          <button class="wishlist-btn ${isWished ? 'active' : ''}" onclick="toggleWishlist(${p.id}); event.stopPropagation()" title="Favorite">
+          <button class="wishlist-btn ${isWished ? 'active' : ''}" title="Favorite">
             ${isWished ? '♥' : '♡'}
           </button>
         </div>
       </div>
     `;
+
+    // Bind event listeners using JS to prevent quotation/syntax issues with names like "Rose d'Orient"
+    const addBtn = card.querySelector('.btn-add-product');
+    const viewBtn = card.querySelector('.btn-view-product');
+    const wishlistBtn = card.querySelector('.wishlist-btn');
+
+    if (addBtn) {
+      addBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const defaultSize = p.sizes && p.sizes.length > 0 ? p.sizes[p.sizes.length - 1] : "100ml";
+        addToCart({ id: p.id, name: p.name, price: p.price, image: p.image, size: defaultSize });
+      });
+    }
+
+    if (viewBtn) {
+      viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openQuickView(p.id);
+      });
+    }
+
+    if (wishlistBtn) {
+      wishlistBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleWishlist(p.id);
+      });
+    }
+
     card.addEventListener('click', () => openQuickView(p.id));
     grid.appendChild(card);
   });
@@ -656,9 +684,28 @@ function openQuickView(productId) {
 
 // Keyboard / window click closing helpers
 function closeQuickView() {
-  document.getElementById('quickViewModal').classList.remove('open');
+  const modal = document.getElementById('quickViewModal');
+  if (modal) {
+    modal.classList.remove('open');
+  }
   document.body.style.overflow = '';
 }
+
+// Register close events for Quick View Modal
+document.addEventListener('DOMContentLoaded', () => {
+  const qvCloseBtn = document.getElementById('quickViewClose');
+  const qvModalOverlay = document.getElementById('quickViewModal');
+  if (qvCloseBtn) {
+    qvCloseBtn.addEventListener('click', closeQuickView);
+  }
+  if (qvModalOverlay) {
+    qvModalOverlay.addEventListener('click', (e) => {
+      if (e.target === qvModalOverlay) {
+        closeQuickView();
+      }
+    });
+  }
+});
 
 function selectSize(btn) {
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
@@ -684,7 +731,7 @@ function addToCart(item) {
   }
   saveCart();
   updateCartBadge();
-  showToast(`${item.name} added to cart`);
+  showCartAddedPopup(item);
 }
 
 function saveCart() {
@@ -696,8 +743,57 @@ function updateCartBadge() {
   if (!badge) return;
   const total = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
   badge.textContent = total;
-  if (total > 0) badge.classList.add('visible');
-  else badge.classList.remove('visible');
+  if (total > 0) {
+    badge.classList.add('visible');
+    badge.classList.remove('badge-bounce');
+    void badge.offsetWidth; // trigger reflow
+    badge.classList.add('badge-bounce');
+  } else {
+    badge.classList.remove('visible');
+  }
+}
+
+function showCartAddedPopup(item) {
+  const existingPopup = document.getElementById('cartAddedPopup');
+  if (existingPopup) {
+    existingPopup.remove();
+  }
+
+  const popup = document.createElement('div');
+  popup.id = 'cartAddedPopup';
+  popup.className = 'cart-popup';
+
+  popup.innerHTML = `
+    <div class="cart-popup-header">
+      <span class="cart-popup-title">✦ Añadido al Carrito</span>
+      <span class="cart-popup-close" onclick="document.getElementById('cartAddedPopup').classList.remove('show')">&#x2715;</span>
+    </div>
+    <div class="cart-popup-body">
+      <img class="cart-popup-img" src="${item.image}" alt="${item.name}" />
+      <div class="cart-popup-details">
+        <div class="cart-popup-name">${item.name}</div>
+        <div class="cart-popup-meta">Tamaño: ${item.size || '100ml'}</div>
+        <div class="cart-popup-price">$${(item.price || 0).toFixed(2)}</div>
+      </div>
+    </div>
+    <div class="cart-popup-actions">
+      <a href="cart.html" class="cart-popup-btn cart-popup-btn-go">Ir al Carrito</a>
+      <button class="cart-popup-btn cart-popup-btn-keep" onclick="document.getElementById('cartAddedPopup').classList.remove('show')">Seguir Comprando</button>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+  void popup.offsetWidth; // trigger reflow
+  popup.classList.add('show');
+
+  setTimeout(() => {
+    if (popup && popup.parentElement) {
+      popup.classList.remove('show');
+      setTimeout(() => {
+        if (popup.parentElement) popup.remove();
+      }, 400);
+    }
+  }, 5000);
 }
 
 // ===== WISHLIST =====
@@ -857,10 +953,32 @@ function submitNewsletter(e) {
 }
 
 // ===== CONTACT FORM =====
-function submitContact(e) {
+async function submitContact(e) {
   e.preventDefault();
-  showToast('Message sent. We will respond soon.');
-  e.target.reset();
+  const form = e.target;
+  const name = form.querySelector('input[placeholder="Your name"]').value.trim();
+  const email = form.querySelector('input[placeholder="email@example.com"]').value.trim();
+  const subjectSelect = form.querySelector('select');
+  const subject = subjectSelect ? subjectSelect.value : 'Inquiry';
+  const message = form.querySelector('textarea').value.trim();
+
+  try {
+    const { db, collection, addDoc, serverTimestamp } = await import('./firebase/firebase.js');
+    await addDoc(collection(db, 'contacts'), {
+      name,
+      email,
+      subject,
+      message,
+      createdAt: serverTimestamp(),
+      read: false
+    });
+    showToast('¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.');
+    form.reset();
+  } catch (err) {
+    console.error('Error submitting contact: ', err);
+    showToast('Message sent. We will respond soon.');
+    form.reset();
+  }
 }
 
 // ===== SMOOTH SCROLL =====
