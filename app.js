@@ -692,20 +692,18 @@ function closeQuickView() {
 }
 
 // Register close events for Quick View Modal
-document.addEventListener('DOMContentLoaded', () => {
-  const qvCloseBtn = document.getElementById('quickViewClose');
-  const qvModalOverlay = document.getElementById('quickViewModal');
-  if (qvCloseBtn) {
-    qvCloseBtn.addEventListener('click', closeQuickView);
-  }
-  if (qvModalOverlay) {
-    qvModalOverlay.addEventListener('click', (e) => {
-      if (e.target === qvModalOverlay) {
-        closeQuickView();
-      }
-    });
-  }
-});
+const qvCloseBtn = document.getElementById('quickViewClose');
+const qvModalOverlay = document.getElementById('quickViewModal');
+if (qvCloseBtn) {
+  qvCloseBtn.addEventListener('click', closeQuickView);
+}
+if (qvModalOverlay) {
+  qvModalOverlay.addEventListener('click', (e) => {
+    if (e.target === qvModalOverlay) {
+      closeQuickView();
+    }
+  });
+}
 
 function selectSize(btn) {
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
