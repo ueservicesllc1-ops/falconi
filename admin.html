@@ -553,6 +553,81 @@
   </div>
 
   <!-- =========================================================
+       MODAL EDIT PRODUCT: EDITAR NOMBRE, FOTO B2, PRECIO Y STOCK
+       ========================================================= -->
+  <div class="admin-modal-overlay" id="modalEditProduct">
+    <div class="admin-modal-card wide">
+      <button class="modal-close-btn" onclick="closeAdminModal('modalEditProduct')">&#x2715;</button>
+      <h2 style="font-family:'Cormorant Garamond',serif; color:#d4af6f; margin-top:0;">✏️ Editar Producto & Cambiar Foto</h2>
+      <p style="font-size:0.8rem; color:#8c8270;">Actualiza el nombre, precio, porcentaje de descuento, stock y foto en Backblaze B2.</p>
+
+      <form id="editProductForm">
+        <input type="hidden" id="editPId" />
+        <div class="form-grid">
+          <div class="field-group">
+            <label>Nombre del Perfume</label>
+            <input type="text" id="editPName" required />
+          </div>
+          <div class="field-group">
+            <label>Categoría</label>
+            <select id="editPCategory">
+              <option value="unisex">Unisex</option>
+              <option value="hombre">Hombre / Men</option>
+              <option value="mujer">Mujer / Women</option>
+              <option value="coleccion">Colección Exclusiva</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Precio Base ($ USD)</label>
+            <input type="number" id="editPPrice" step="0.01" required />
+          </div>
+          <div class="field-group">
+            <label>Descuento en %</label>
+            <input type="number" id="editPDiscount" min="0" max="100" />
+          </div>
+          <div class="field-group">
+            <label>Stock (Unidades)</label>
+            <input type="number" id="editPStock" min="0" required />
+          </div>
+          <div class="field-group form-full">
+            <label>Tamaños Disponibles</label>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.3rem; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid rgba(192, 155, 87, 0.2);">
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: #e6d5b8; font-size: 0.85rem;">
+                <input type="checkbox" id="editPSize30" value="30ml" style="accent-color: #c09b57;" /> 30 ml
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: #e6d5b8; font-size: 0.85rem;">
+                <input type="checkbox" id="editPSize50" value="50ml" style="accent-color: #c09b57;" /> 50 ml
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: #e6d5b8; font-size: 0.85rem;">
+                <input type="checkbox" id="editPSize100" value="100ml" style="accent-color: #c09b57;" /> 100 ml
+              </label>
+            </div>
+          </div>
+          <div class="field-group form-full">
+            <label>1 Foto del Producto (Subir a B2 o URL Directa)</label>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" id="editPImage" required style="flex:1;" />
+              <input type="file" id="editPSingleFile" style="display:none;" accept="image/*" />
+              <button type="button" class="btn-action-ghost" onclick="document.getElementById('editPSingleFile').click()">Subir Foto a B2</button>
+            </div>
+            <span id="editB2UploadStatus" style="font-size:0.75rem; color:#c09b57; margin-top:0.2rem;"></span>
+          </div>
+          <div class="field-group form-full">
+            <label>Notas Olfativas (separadas por coma)</label>
+            <input type="text" id="editPNotes" required />
+          </div>
+          <div class="field-group form-full">
+            <label>Descripción</label>
+            <textarea id="editPDesc" rows="3" required></textarea>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit-gold">✓ Guardar Cambios en Firestore &#x2756;</button>
+        <div id="editProductStatus" class="status-alert"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
        MODAL 2: ORDERS MANAGER (STRIPE & SHIPPO)
        ========================================================= -->
   <div class="admin-modal-overlay" id="modalOrders">

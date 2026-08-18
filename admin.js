@@ -5,6 +5,7 @@ import {
   db,
   collection,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -247,6 +248,7 @@ async function loadCatalog() {
             <input type="number" id="stock_input_${docSnap.id}" value="${currentStock}" min="0" style="width:60px; padding:2px 6px; background:rgba(0,0,0,0.6); border:1px solid #c09b57; color:#fff; border-radius:4px; font-size:0.8rem; text-align:center;" />
             <button style="background:#c09b57; color:#000; font-size:0.65rem; font-weight:700; padding:4px 6px; border:none; border-radius:4px; cursor:pointer;" onclick="updateProductStock('${docSnap.id}')">Guardar</button>
           </div>
+          <button style="width:100%; background:linear-gradient(135deg, #c09b57, #d4af6f); color:#000; font-size:0.75rem; font-weight:800; padding:0.4rem 0.6rem; border:none; border-radius:4px; cursor:pointer; text-transform:uppercase; margin-bottom:0.3rem; box-shadow: 0 4px 10px rgba(192, 155, 87, 0.3);" onclick="openEditProductModal('${docSnap.id}')">✏️ Editar Producto (Foto/Precio)</button>
           <button style="width:100%; background:rgba(220,53,69,0.2); border:1px solid #dc3545; color:#ff8a8a; font-size:0.7rem; padding:0.3rem 0.6rem; border-radius:4px; cursor:pointer;" onclick="deleteProduct('${docSnap.id}')">Eliminar Producto</button>
         </div>
       `;
@@ -487,3 +489,111 @@ async function loadClients() {
     </div>
   `;
 }
+
+
+// =========================================================
+// GESTOR DE EDICIÓN DE PRODUCTOS Y SUBIDA A B2
+// =========================================================
+
+window.openEditProductModal = async function(id) {
+  try {
+    const docRef = doc(db, "products", id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      alert("No se encontró el producto en Firestore.");
+      return;
+    }
+
+    const p = docSnap.data();
+    document.getElementById("editPId").value = id;
+    document.getElementById("editPName").value = p.name || "";
+    document.getElementById("editPCategory").value = p.category || "unisex";
+    document.getElementById("editPPrice").value = p.price || 0;
+    document.getElementById("editPDiscount").value = p.discountPercent || 0;
+    document.getElementById("editPStock").value = p.stock !== undefined ? p.stock : 15;
+    document.getElementById("editPImage").value = p.image || "";
+    document.getElementById("editPNotes").value = (p.notes && Array.isArray(p.notes)) ? p.notes.join(", ") : (p.notes || "");
+    document.getElementById("editPDesc").value = p.description || "";
+
+    const sizes = p.sizes || [];
+    if (document.getElementById("editPSize30")) document.getElementById("editPSize30").checked = sizes.includes("30ml");
+    if (document.getElementById("editPSize50")) document.getElementById("editPSize50").checked = sizes.includes("50ml");
+    if (document.getElementById("editPSize100")) document.getElementById("editPSize100").checked = sizes.includes("100ml");
+
+    openAdminModal("modalEditProduct");
+  } catch (err) {
+    alert("Error al abrir edición: " + err.message);
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const editSingleFile = document.getElementById("editPSingleFile");
+  if (editSingleFile) {
+    editSingleFile.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const statusSpan = document.getElementById("editB2UploadStatus");
+      statusSpan.textContent = "Subiendo foto a Backblaze B2...";
+      try {
+        const result = await uploadMediaToB2(file, "products");
+        document.getElementById("editPImage").value = result.url;
+        statusSpan.textContent = "✓ ¡Foto subida exitosamente a B2!";
+        statusSpan.style.color = "#75b798";
+      } catch (err) {
+        statusSpan.textContent = "Error al subir foto: " + err.message;
+        statusSpan.style.color = "#ff8a8a";
+      }
+    });
+  }
+
+  const editForm = document.getElementById("editProductForm");
+  if (editForm) {
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editPId").value;
+      const statusDiv = document.getElementById("editProductStatus");
+      statusDiv.style.display = "block";
+      statusDiv.textContent = "Actualizando producto en Firestore...";
+      statusDiv.style.background = "rgba(192,155,87,0.2)";
+      statusDiv.style.color = "#c09b57";
+
+      try {
+        const discountVal = parseFloat(document.getElementById("editPDiscount").value) || 0;
+        const basePrice = parseFloat(document.getElementById("editPPrice").value);
+        const stockVal = parseInt(document.getElementById("editPStock").value) || 15;
+
+        const selectedSizes = [];
+        if (document.getElementById("editPSize30")?.checked) selectedSizes.push("30ml");
+        if (document.getElementById("editPSize50")?.checked) selectedSizes.push("50ml");
+        if (document.getElementById("editPSize100")?.checked) selectedSizes.push("100ml");
+
+        const updatedData = {
+          name: document.getElementById("editPName").value.trim(),
+          category: document.getElementById("editPCategory").value,
+          price: basePrice,
+          discountPercent: discountVal,
+          finalPrice: discountVal > 0 ? basePrice * (1 - discountVal / 100) : basePrice,
+          stock: stockVal,
+          sizes: selectedSizes.length > 0 ? selectedSizes : ["100ml"],
+          image: document.getElementById("editPImage").value.trim(),
+          notes: document.getElementById("editPNotes").value.split(",").map(n => n.trim()),
+          description: document.getElementById("editPDesc").value.trim()
+        };
+
+        await updateDoc(doc(db, "products", id), updatedData);
+        statusDiv.textContent = "✓ ¡Producto actualizado exitosamente!";
+        statusDiv.style.background = "rgba(40,167,69,0.2)";
+        statusDiv.style.color = "#75b798";
+        setTimeout(() => {
+          closeAdminModal("modalEditProduct");
+          loadCatalog();
+        }, 1000);
+      } catch (err) {
+        statusDiv.textContent = "Error: " + err.message;
+        statusDiv.style.background = "rgba(220,53,69,0.2)";
+        statusDiv.style.color = "#ff8a8a";
+      }
+    });
+  }
+});
