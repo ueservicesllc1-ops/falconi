@@ -118,6 +118,7 @@
         <li><a href="#coleccion" class="nav-link">Collection</a></li>
         <li><a href="#nosotros" class="nav-link">About</a></li>
         <li><a href="#ingredientes" class="nav-link">Ingredients</a></li>
+        <li><a href="#videos" class="nav-link">Videos</a></li>
         <li><a href="#contacto" class="nav-link">Contact</a></li>
       </ul>
       <div class="nav-actions">
@@ -285,6 +286,67 @@
       <div class="ingredient-card">
         <div class="ingredient-visual saffron-visual"></div>
         <div class="ingredient-info"><h3>Persian Saffron</h3><p class="ingredient-origin">Iran, Spain</p><p>The red gold of perfumery. Its spicy and slightly earthy warmth creates uniquely Oriental accords.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIDEOS ===== -->
+  <section class="videos-section" id="videos">
+    <div class="section-header">
+      <span class="section-eyebrow">&#x2756; Falconi Experience &#x2756;</span>
+      <h2 class="section-title">The Art in Motion</h2>
+      <p class="section-subtitle">Immerse yourself in our olfactory universe through our cinematic stories.</p>
+    </div>
+    <div class="video-container">
+      <div class="main-video-player">
+        <video id="featuredVideo" src="https://assets.mixkit.co/videos/preview/mixkit-perfume-bottle-on-a-golden-background-40012-large.mp4" loop muted playsinline></video>
+        <div class="video-overlay-play" id="videoOverlay" onclick="toggleFeaturedVideo()">
+          <div class="play-btn-circle">
+            <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          </div>
+          <span>Play Experience</span>
+        </div>
+      </div>
+      
+      <div class="video-playlist">
+        <div class="playlist-item active" onclick="changeFeaturedVideo('https://assets.mixkit.co/videos/preview/mixkit-perfume-bottle-on-a-golden-background-40012-large.mp4', this)">
+          <div class="playlist-thumb">
+            <div class="thumb-overlay">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=200&auto=format&fit=crop" alt="The Art of Perfumery">
+          </div>
+          <div class="playlist-info">
+            <h4>The Art of Perfumery</h4>
+            <p>0:15 &middot; Falconi Essence</p>
+          </div>
+        </div>
+        
+        <div class="playlist-item" onclick="changeFeaturedVideo('https://assets.mixkit.co/videos/preview/mixkit-spraying-perfume-on-a-black-background-40011-large.mp4', this)">
+          <div class="playlist-thumb">
+            <div class="thumb-overlay">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=200&auto=format&fit=crop" alt="The Mystique of Oud">
+          </div>
+          <div class="playlist-info">
+            <h4>The Mystique of Oud</h4>
+            <p>0:18 &middot; Rare Extracts</p>
+          </div>
+        </div>
+
+        <div class="playlist-item" onclick="changeFeaturedVideo('https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-perfume-bottle-40010-large.mp4', this)">
+          <div class="playlist-thumb">
+            <div class="thumb-overlay">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=200&auto=format&fit=crop" alt="Harvesting Damask Roses">
+          </div>
+          <div class="playlist-info">
+            <h4>Pure Damask Rose</h4>
+            <p>0:12 &middot; Extraction Process</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>

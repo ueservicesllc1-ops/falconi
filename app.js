@@ -1296,9 +1296,69 @@ window.sendCustomerMessage = async function() {
   }
 };
 
+// ===== VIDEOS SECTION LOGIC =====
+function toggleFeaturedVideo() {
+  const video = document.getElementById('featuredVideo');
+  const overlay = document.getElementById('videoOverlay');
+  if (!video || !overlay) return;
+
+  if (video.paused) {
+    video.play().then(() => {
+      overlay.classList.add('playing');
+    }).catch(err => console.log('Playback error: ', err));
+  } else {
+    video.pause();
+    overlay.classList.remove('playing');
+  }
+}
+
+function changeFeaturedVideo(src, element) {
+  const video = document.getElementById('featuredVideo');
+  const overlay = document.getElementById('videoOverlay');
+  if (!video || !overlay) return;
+
+  // Pause current
+  video.pause();
+  
+  // Change source
+  video.src = src;
+  video.load();
+
+  // Play new video
+  video.play().then(() => {
+    overlay.classList.add('playing');
+  }).catch(err => {
+    console.log('Playback error on change: ', err);
+    overlay.classList.remove('playing');
+  });
+
+  // Update active class in playlist
+  const items = document.querySelectorAll('.playlist-item');
+  items.forEach(item => item.classList.remove('active'));
+  element.classList.add('active');
+}
+
+// Add automatic listeners to video state to update overlay play button
+document.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('featuredVideo');
+  const overlay = document.getElementById('videoOverlay');
+  if (video && overlay) {
+    video.addEventListener('play', () => {
+      overlay.classList.add('playing');
+    });
+    video.addEventListener('pause', () => {
+      overlay.classList.remove('playing');
+    });
+    video.addEventListener('ended', () => {
+      overlay.classList.remove('playing');
+    });
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   initCustomerLiveChat();
 });
 
 console.log('%c✦ Falconi Parfums ✦', 'color:#c09b57;font-size:20px;font-family:serif;');
 console.log('%cInspired by Oriental Perfumery', 'color:#d4af6f;font-size:12px;');
+
