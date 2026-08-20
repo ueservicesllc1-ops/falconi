@@ -20,6 +20,9 @@
 
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar scrolled" id="navbar">
+    <div class="announcement-bar">
+      <span>✨ Envío gratis por compras mayores a $60 ✨</span>
+    </div>
     <div class="nav-container">
       <a href="index.html" class="nav-logo">
         <img src="LOGOBLANCO.png" alt="Falconi Parfums" class="logo-img" />
@@ -366,11 +369,15 @@
     function updateTotals() {
       const subtotal = cart.reduce((sum, item) => sum + item.price * (item.qty || 1), 0);
       const shippingOpt = document.querySelector('input[name="flowShippingOpt"]:checked');
-      const shipping = parseFloat(shippingOpt ? shippingOpt.value : 15);
+      let shipping = parseFloat(shippingOpt ? shippingOpt.value : 15);
+      const isFreeShipping = subtotal >= 60;
+      if (isFreeShipping) {
+        shipping = 0;
+      }
       const total = subtotal + shipping;
 
       document.getElementById('summarySubtotal').textContent = '$' + subtotal.toFixed(2);
-      document.getElementById('summaryShipping').textContent = '$' + shipping.toFixed(2);
+      document.getElementById('summaryShipping').textContent = isFreeShipping ? 'Gratis' : '$' + shipping.toFixed(2);
       document.getElementById('summaryTotal').textContent = '$' + total.toFixed(2);
     }
 
@@ -424,52 +431,58 @@
         });
         const data = await res.json();
 
+        const subtotal = cart.reduce((sum, item) => sum + item.price * (item.qty || 1), 0);
+        const isFree = subtotal >= 60;
+
         if (data.success && data.rates && data.rates.length > 0) {
           // Sort lowest price first
           const sortedRates = data.rates.sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
 
           container.innerHTML = sortedRates.map((rate, i) => {
             const daysText = rate.estimatedDays ? (rate.estimatedDays == 1 ? '1 business day' : `${rate.estimatedDays} business days`) : '3-5 business days';
+            const priceDisplay = isFree ? `<span style="text-decoration:line-through; color:#8c8270; font-size:0.85rem; margin-right:0.5rem;">$${parseFloat(rate.amount).toFixed(2)}</span> Gratis` : `$${parseFloat(rate.amount).toFixed(2)} ${rate.currency}`;
             return `
               <label class="shipping-option" style="margin-bottom:0.75rem; cursor:pointer;">
-                <input type="radio" name="flowShippingOpt" value="${rate.amount}" ${i === 0 ? 'checked' : ''} onchange="updateFlowShipping(${rate.amount})" />
+                <input type="radio" name="flowShippingOpt" value="${isFree ? '0.00' : rate.amount}" ${i === 0 ? 'checked' : ''} onchange="updateFlowShipping(${isFree ? 0 : rate.amount})" />
                 <div class="shipping-info" style="display:flex; justify-content:space-between; width:100%; padding:0.5rem 0.75rem;">
                   <div>
                     <strong style="color:#e6d5b8; display:block; font-size:0.9rem;">${rate.provider} — ${rate.servicelevel}</strong>
                     <span style="font-size:0.78rem; color:#8c8270;">⏱️ Estimated Delivery: ${daysText}</span>
                   </div>
-                  <span style="color:#c09b57; font-weight:bold; font-size:1.05rem;">$${parseFloat(rate.amount).toFixed(2)} ${rate.currency}</span>
+                  <span style="color:#c09b57; font-weight:bold; font-size:1.05rem;">${priceDisplay}</span>
                 </div>
               </label>
             `;
           }).join('');
 
           // Auto select cheapest rate
-          updateFlowShipping(parseFloat(sortedRates[0].amount));
+          updateFlowShipping(isFree ? 0 : parseFloat(sortedRates[0].amount));
         } else {
           // Standard fallback options if address is test/unserviced
           container.innerHTML = `
             <label class="shipping-option">
-              <input type="radio" name="flowShippingOpt" value="12.50" checked onchange="updateFlowShipping(12.50)" />
-              <div class="shipping-info"><span>Standard Shipping</span><span>$12.50</span></div>
+              <input type="radio" name="flowShippingOpt" value="${isFree ? '0.00' : '12.50'}" checked onchange="updateFlowShipping(${isFree ? 0 : 12.50})" />
+              <div class="shipping-info"><span>Standard Shipping</span><span>${isFree ? 'Gratis' : '$12.50'}</span></div>
             </label>
             <label class="shipping-option">
               <input type="radio" name="flowShippingOpt" value="28.00" onchange="updateFlowShipping(28.00)" />
               <div class="shipping-info"><span>Express Premium</span><span>$28.00</span></div>
             </label>
           `;
-          updateFlowShipping(12.50);
+          updateFlowShipping(isFree ? 0 : 12.50);
         }
         clearShippingStale();
       } catch (err) {
         console.log('Shippo rate fetch error:', err);
+        const subtotal = cart.reduce((sum, item) => sum + item.price * (item.qty || 1), 0);
+        const isFree = subtotal >= 60;
         container.innerHTML = `
           <label class="shipping-option">
-            <input type="radio" name="flowShippingOpt" value="15.00" checked onchange="updateFlowShipping(15.00)" />
-            <div class="shipping-info"><span>Standard Priority Shipping</span><span>$15.00</span></div>
+            <input type="radio" name="flowShippingOpt" value="${isFree ? '0.00' : '15.00'}" checked onchange="updateFlowShipping(${isFree ? 0 : 15.00})" />
+            <div class="shipping-info"><span>Standard Priority Shipping</span><span>${isFree ? 'Gratis' : '$15.00'}</span></div>
           </label>
         `;
-        updateFlowShipping(15.00);
+        updateFlowShipping(isFree ? 0 : 15.00);
         clearShippingStale();
       }
     }

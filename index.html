@@ -82,6 +82,31 @@
     </div>
   </div>
 
+  <!-- ===== SOCIAL PROMO MODAL ===== -->
+  <div class="modal-overlay" id="socialPromoModal">
+    <div class="modal-panel" style="max-width: 440px; padding: 2.5rem; text-align: center; background: rgba(12, 10, 15, 0.96); border: 1.5px solid #c09b57; border-radius: 12px; backdrop-filter: blur(20px); box-shadow: 0 20px 50px rgba(0,0,0,0.85);">
+      <button class="modal-close" id="socialPromoClose">&#x2715;</button>
+      <div style="margin-bottom: 1.5rem;">
+        <img src="LOGOBLANCO.png" alt="Falconi" style="height: 38px; margin: 0 auto 0.75rem auto;" />
+        <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #e6d5b8; margin: 0 0 0.5rem 0; line-height: 1.2;">Síguenos en nuestras redes</h3>
+        <p style="font-size: 0.85rem; color: #9a8f7c; margin: 0; font-family: 'Montserrat', sans-serif;">Y entérate de nuestras últimas colecciones y fragancias exclusivas.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+        <a href="https://www.instagram.com/falconiparfums/" target="_blank" rel="noopener noreferrer" class="social-promo-btn insta">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          Instagram
+        </a>
+        <a href="https://www.tiktok.com/@falconiparfums" target="_blank" rel="noopener noreferrer" class="social-promo-btn tiktok">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.99.78 2.26 1.25 3.54 1.34V9.3c-1.3-.06-2.58-.51-3.64-1.3-.12-.09-.24-.2-.35-.31-.05 2.16-.02 4.31-.04 6.47-.05 1.58-.52 3.19-1.48 4.47-.96 1.41-2.53 2.37-4.24 2.65-2.07.41-4.32-.12-5.96-1.46-1.85-1.4-2.73-3.87-2.22-6.17.43-2.19 2.12-4.04 4.28-4.68.85-.27 1.76-.32 2.64-.17v3.74c-.58-.17-1.21-.19-1.79-.05-.98.2-1.83.89-2.21 1.83-.55 1.23-.23 2.78.75 3.66.9.82 2.29.98 3.36.42 1.05-.51 1.69-1.63 1.73-2.8.03-3.15.01-6.3.02-9.45.02-.38.02-.76.02-1.14z"/></svg>
+          TikTok
+        </a>
+      </div>
+
+      <button id="socialPromoContinue" class="btn-ghost full-width" style="padding: 0.8rem; font-size: 0.75rem; letter-spacing: 0.15em; border-color: rgba(192, 155, 87, 0.4); text-transform: uppercase;">Seguir en esta página</button>
+    </div>
+  </div>
+
   <!-- ===== QUICK VIEW MODAL ===== -->
   <div class="modal-overlay" id="quickViewModal">
     <div class="modal-panel quickview-panel">
@@ -112,6 +137,9 @@
 
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar" id="navbar">
+    <div class="announcement-bar">
+      <span>✨ Envío gratis por compras mayores a $60 ✨</span>
+    </div>
     <div class="nav-container">
       <ul class="nav-links" id="navLinks">
         <li><a href="#home" class="nav-link active">Home</a></li>

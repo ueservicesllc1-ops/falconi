@@ -1007,6 +1007,7 @@ document.addEventListener('keydown', e => {
     closeQuickView();
     document.getElementById('clientAuthModal')?.classList.remove('open');
     document.getElementById('adminPinModal')?.classList.remove('open');
+    document.getElementById('socialPromoModal')?.classList.remove('open');
     document.body.style.overflow = '';
   }
 });
@@ -1357,7 +1358,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   initCustomerLiveChat();
+  initSocialPromoModal();
 });
+
+function initSocialPromoModal() {
+  const modal = document.getElementById('socialPromoModal');
+  const closeBtn = document.getElementById('socialPromoClose');
+  const continueBtn = document.getElementById('socialPromoContinue');
+  
+  if (!modal) return;
+
+  // Show only once per session to avoid annoying users
+  if (!sessionStorage.getItem('socialPromoShown')) {
+    setTimeout(() => {
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }, 1000); // 1-second delay for a smooth entry
+  }
+
+  const closeModal = () => {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    sessionStorage.setItem('socialPromoShown', 'true');
+  };
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (continueBtn) continueBtn.addEventListener('click', closeModal);
+
+  // Close when clicking overlay backdrop
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+}
 
 console.log('%c✦ Falconi Parfums ✦', 'color:#c09b57;font-size:20px;font-family:serif;');
 console.log('%cInspired by Oriental Perfumery', 'color:#d4af6f;font-size:12px;');
