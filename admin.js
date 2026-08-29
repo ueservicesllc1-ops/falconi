@@ -1,8 +1,9 @@
 // ===== IMAGE URL HELPER =====
 function fixImageUrl(url) {
   if (!url) return 'assets/oud-noir.png';
-  if (url.includes('localhost') && url.includes('/api/media/file/')) {
-    return url.substring(url.indexOf('/api/media/file/'));
+  if (url.includes('/api/media/file/')) {
+    const key = url.substring(url.indexOf('/api/media/file/') + '/api/media/file/'.length);
+    return `https://f005.backblazeb2.com/file/falconi/${key}`;
   }
   return url;
 }

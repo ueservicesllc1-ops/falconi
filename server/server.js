@@ -116,9 +116,8 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
 
     await s3Client.send(command);
 
-    // Generate a presigned URL valid for 7 days so the stored URL works without proxy
-    const getCmd = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: filename });
-    const fileUrl = await getSignedUrl(s3Client, getCmd, { expiresIn: 604800 });
+    // Bucket is public — use direct Backblaze download URL
+    const fileUrl = `https://f005.backblazeb2.com/file/${BUCKET_NAME}/${filename}`;
 
     res.json({
       success: true,
