@@ -14,7 +14,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
+const SITE_URL = process.env.SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://falconi-production.up.railway.app' : `http://localhost:${PORT}`);
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 app.use(cors());
@@ -112,7 +112,7 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
     });
 
     await s3Client.send(command);
-    const fileUrl = `http://localhost:${PORT}/api/media/file/${filename}`;
+    const fileUrl = `${SITE_URL}/api/media/file/${filename}`;
 
     res.json({
       success: true,

@@ -1,4 +1,14 @@
-// Falconi Parfums — Advisor Portal Engine (asesor.js)
+// Falconi Parfums — Advisor & Inventory Panel
+
+// ===== IMAGE URL HELPER (same as app.js) =====
+function fixImageUrl(url) {
+  if (!url) return 'assets/oud-noir.png';
+  if (/http:\/\/localhost:\d+(\/api\/media\/file\/)/i.test(url)) {
+    return url.replace(/^http:\/\/localhost:\d+/, '');
+  }
+  return url;
+}
+
 import { 
   db, 
   collection, 
@@ -270,7 +280,7 @@ function listenToProducts() {
       gridHtml += `
         <div class="data-card">
           <div style="height:140px; overflow:hidden; border-radius:6px; margin-bottom:0.75rem; background:#000;">
-            <img src="${p.image || 'assets/oud-noir.png'}" style="width:100%; height:100%; object-fit:cover;" alt="${p.name}" />
+            <img src="${fixImageUrl(p.image) || 'assets/oud-noir.png'}" style="width:100%; height:100%; object-fit:cover;" alt="${p.name}" />
           </div>
           <h3 style="font-family:'Cormorant Garamond',serif; color:#c09b57; font-size:1.2rem; margin:0 0 0.3rem;">${p.name}</h3>
           <p style="font-size:0.78rem; color:#8c8270; margin-bottom:0.5rem;">${p.description ? p.description.substring(0, 70) + '...' : 'Perfume de lujo'}</p>

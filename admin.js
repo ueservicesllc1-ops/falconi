@@ -1,3 +1,12 @@
+// ===== IMAGE URL HELPER =====
+function fixImageUrl(url) {
+  if (!url) return 'assets/oud-noir.png';
+  if (/http:\/\/localhost:\d+(\/api\/media\/file\/)/i.test(url)) {
+    return url.replace(/^http:\/\/localhost:\d+/, '');
+  }
+  return url;
+}
+
 import { 
   auth, 
   onAuthStateChanged, 
@@ -239,7 +248,7 @@ async function loadCatalog() {
 
       card.innerHTML = `
         ${hasDiscount ? `<span style="position:absolute; top:8px; right:8px; background:#dc3545; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:700;">-${p.discountPercent}% OFF</span>` : ''}
-        <img src="${p.image}" alt="${p.name}" style="width:100%; height:120px; object-fit:cover; border-radius:6px;" />
+        <img src="${fixImageUrl(p.image)}" alt="${p.name}" style="width:100%; height:120px; object-fit:cover; border-radius:6px;" />
         <h4 style="color:#c09b57; font-size:0.9rem; margin:0.5rem 0 0.2rem 0;">${p.name}</h4>
         <div style="font-size:0.8rem; margin-bottom:0.3rem;">
           ${hasDiscount 

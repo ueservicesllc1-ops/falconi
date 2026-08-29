@@ -2,6 +2,18 @@
    FALCONI PARFUMS — JavaScript Engine (English Version)
    ========================================================= */
 
+// ===== IMAGE URL HELPER =====
+// Normalizes stored URLs: converts any hardcoded localhost proxy URL
+// to a relative path so images work in production (Railway, etc.)
+function fixImageUrl(url) {
+  if (!url) return 'assets/oud-noir.png';
+  // If the URL has localhost and points to our proxy, make it relative
+  if (/http:\/\/localhost:\d+(\/api\/media\/file\/)/i.test(url)) {
+    return url.replace(/^http:\/\/localhost:\d+/, '');
+  }
+  return url;
+}
+
 // ===== PRODUCTS DATA =====
 const PRODUCTS = [
   {
@@ -344,7 +356,7 @@ async function loadFirestoreProductsToStore() {
         category: p.category || "unisex",
         badge: p.badge || "",
         price: Number(p.price) || 0,
-        image: p.image || "assets/oud-noir.png",
+        image: fixImageUrl(p.image),
         sizes: p.sizes || ["50ml", "100ml"],
         stock: p.stock !== undefined ? Number(p.stock) : 15,
         notes: p.notes || [],
