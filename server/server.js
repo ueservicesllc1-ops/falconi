@@ -14,7 +14,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SITE_URL = process.env.SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://falconi-production.up.railway.app' : `http://localhost:${PORT}`);
+const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 app.use(cors());
@@ -39,8 +39,6 @@ const s3Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.B2_BUCKET || 'falconi';
-// Direct B2 public CDN URL (no proxy needed - bucket must be public)
-const B2_PUBLIC_URL = process.env.B2_PUBLIC_URL || 'https://f005.backblazeb2.com/file/falconi';
 const SHIPPO_TOKEN = process.env.SHIPPO_API_TOKEN;
 
 // Initialize Stripe
@@ -66,9 +64,36 @@ app.get('/health', (req, res) => {
     status: 'ok',
     bucket: BUCKET_NAME,
     siteUrl: SITE_URL,
+    b2Endpoint: process.env.B2_ENDPOINT || 'NOT SET',
+    b2KeyId: process.env.B2_KEY_ID ? 'SET' : 'NOT SET',
+    b2AppKey: process.env.B2_APP_KEY ? 'SET' : 'NOT SET',
     shippoConnected: Boolean(SHIPPO_TOKEN),
     timestamp: new Date().toISOString()
   });
+});
+
+// B2 Connection Diagnostic — tests if server can actually reach B2
+app.get('/api/media/test', async (req, res) => {
+  try {
+    const command = new ListObjectsV2Command({ Bucket: BUCKET_NAME, MaxKeys: 3 });
+    const response = await s3Client.send(command);
+    const files = (response.Contents || []).map(f => f.Key);
+    res.json({
+      success: true,
+      message: 'B2 connection works from this server',
+      bucket: BUCKET_NAME,
+      sampleFiles: files,
+      endpoint: process.env.B2_ENDPOINT
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'B2 connection FAILED',
+      error: error.message,
+      endpoint: process.env.B2_ENDPOINT || 'NOT SET',
+      keyId: process.env.B2_KEY_ID ? 'SET' : 'NOT SET'
+    });
+  }
 });
 
 /* =========================================================
