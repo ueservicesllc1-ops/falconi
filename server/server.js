@@ -63,6 +63,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     bucket: BUCKET_NAME,
+    siteUrl: SITE_URL,
     shippoConnected: Boolean(SHIPPO_TOKEN),
     timestamp: new Date().toISOString()
   });
