@@ -3,7 +3,8 @@
    ========================================================= */
 
 // ===== IMAGE URL HELPER =====
-// Strips any hardcoded localhost origin so images work in production
+// Strips localhost origin from legacy stored URLs -> relative /api/media/file/...
+// The server proxy at /api/media/file/* redirects to a B2 presigned URL
 function fixImageUrl(url) {
   if (!url) return 'assets/oud-noir.png';
   if (url.includes('localhost') && url.includes('/api/media/file/')) {
@@ -11,6 +12,7 @@ function fixImageUrl(url) {
   }
   return url;
 }
+
 
 
 // ===== PRODUCTS DATA =====

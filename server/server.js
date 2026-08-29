@@ -39,6 +39,8 @@ const s3Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.B2_BUCKET || 'falconi';
+// Direct B2 public CDN URL (no proxy needed - bucket must be public)
+const B2_PUBLIC_URL = process.env.B2_PUBLIC_URL || 'https://f005.backblazeb2.com/file/falconi';
 const SHIPPO_TOKEN = process.env.SHIPPO_API_TOKEN;
 
 // Initialize Stripe
@@ -113,7 +115,10 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
     });
 
     await s3Client.send(command);
-    const fileUrl = `${SITE_URL}/api/media/file/${filename}`;
+
+    // Generate a presigned URL valid for 7 days so the stored URL works without proxy
+    const getCmd = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: filename });
+    const fileUrl = await getSignedUrl(s3Client, getCmd, { expiresIn: 604800 });
 
     res.json({
       success: true,
@@ -129,23 +134,16 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Stream / Proxy file from B2
+// Proxy: redirect to a presigned B2 URL (handles legacy /api/media/file/... URLs)
 app.get('/api/media/file/*', async (req, res) => {
   try {
     const key = req.params[0];
-    const command = new GetObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: key
-    });
-    const response = await s3Client.send(command);
-
-    if (response.ContentType) res.setHeader('Content-Type', response.ContentType);
-    if (response.ContentLength) res.setHeader('Content-Length', response.ContentLength);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-
-    response.Body.pipe(res);
+    const command = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key });
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.redirect(302, signedUrl);
   } catch (error) {
-    console.error('B2 Proxy Stream Error:', error);
+    console.error('B2 Proxy Error:', error);
     res.status(404).json({ success: false, error: 'File not found' });
   }
 });
