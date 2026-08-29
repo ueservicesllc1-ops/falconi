@@ -116,8 +116,8 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
 
     await s3Client.send(command);
 
-    // Bucket is public — use direct Backblaze download URL
-    const fileUrl = `https://f005.backblazeb2.com/file/${BUCKET_NAME}/${filename}`;
+    // Return URL through our proxy endpoint
+    const fileUrl = `${SITE_URL}/api/media/file/${filename}`;
 
     res.json({
       success: true,
@@ -133,36 +133,25 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Proxy for public B2 bucket — uses native https (works on all Node versions)
-const https = require('https');
-app.get('/api/media/file/*', (req, res) => {
-  const key = req.params[0];
-  const b2Url = `https://f005.backblazeb2.com/file/${BUCKET_NAME}/${key}`;
+// Stream / Proxy file from B2
+app.get('/api/media/file/*', async (req, res) => {
+  try {
+    const key = req.params[0];
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key
+    });
+    const response = await s3Client.send(command);
 
-  https.get(b2Url, (b2Res) => {
-    // Handle B2 redirects (3xx)
-    if (b2Res.statusCode >= 300 && b2Res.statusCode < 400 && b2Res.headers.location) {
-      return https.get(b2Res.headers.location, (redirectRes) => {
-        res.setHeader('Content-Type', redirectRes.headers['content-type'] || 'image/png');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
-        redirectRes.pipe(res);
-      }).on('error', (e) => {
-        console.error('B2 redirect error:', e.message);
-        res.status(500).json({ success: false, error: e.message });
-      });
-    }
-
-    if (b2Res.statusCode !== 200) {
-      return res.status(b2Res.statusCode).json({ success: false, error: 'File not found in B2' });
-    }
-
-    res.setHeader('Content-Type', b2Res.headers['content-type'] || 'image/png');
+    if (response.ContentType) res.setHeader('Content-Type', response.ContentType);
+    if (response.ContentLength) res.setHeader('Content-Length', response.ContentLength);
     res.setHeader('Cache-Control', 'public, max-age=86400');
-    b2Res.pipe(res);
-  }).on('error', (e) => {
-    console.error('B2 Proxy Error:', e.message);
-    res.status(500).json({ success: false, error: e.message });
-  });
+
+    response.Body.pipe(res);
+  } catch (error) {
+    console.error('B2 Proxy Stream Error:', error);
+    res.status(404).json({ success: false, error: 'File not found' });
+  }
 });
 
 // Delete file from B2
