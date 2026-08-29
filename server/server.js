@@ -133,29 +133,36 @@ app.post('/api/media/upload', upload.single('file'), async (req, res) => {
   }
 });
 
-// Proxy for public B2 bucket — fetches directly without credentials
-// Railway server can reach Backblaze even if the user's browser/ISP cannot
-app.get('/api/media/file/*', async (req, res) => {
-  try {
-    const key = req.params[0];
-    const b2Url = `https://f005.backblazeb2.com/file/${BUCKET_NAME}/${key}`;
+// Proxy for public B2 bucket — uses native https (works on all Node versions)
+const https = require('https');
+app.get('/api/media/file/*', (req, res) => {
+  const key = req.params[0];
+  const b2Url = `https://f005.backblazeb2.com/file/${BUCKET_NAME}/${key}`;
 
-    const b2Response = await fetch(b2Url);
-    if (!b2Response.ok) {
-      return res.status(b2Response.status).json({ success: false, error: 'File not found in B2' });
+  https.get(b2Url, (b2Res) => {
+    // Handle B2 redirects (3xx)
+    if (b2Res.statusCode >= 300 && b2Res.statusCode < 400 && b2Res.headers.location) {
+      return https.get(b2Res.headers.location, (redirectRes) => {
+        res.setHeader('Content-Type', redirectRes.headers['content-type'] || 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        redirectRes.pipe(res);
+      }).on('error', (e) => {
+        console.error('B2 redirect error:', e.message);
+        res.status(500).json({ success: false, error: e.message });
+      });
     }
 
-    res.setHeader('Content-Type', b2Response.headers.get('content-type') || 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (b2Res.statusCode !== 200) {
+      return res.status(b2Res.statusCode).json({ success: false, error: 'File not found in B2' });
+    }
 
-    // Stream B2 response body to client
-    const { Readable } = require('stream');
-    Readable.fromWeb(b2Response.body).pipe(res);
-  } catch (error) {
-    console.error('B2 Proxy Error:', error.message);
-    res.status(500).json({ success: false, error: error.message });
-  }
+    res.setHeader('Content-Type', b2Res.headers['content-type'] || 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    b2Res.pipe(res);
+  }).on('error', (e) => {
+    console.error('B2 Proxy Error:', e.message);
+    res.status(500).json({ success: false, error: e.message });
+  });
 });
 
 // Delete file from B2
