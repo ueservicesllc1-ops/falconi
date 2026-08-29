@@ -3,16 +3,15 @@
    ========================================================= */
 
 // ===== IMAGE URL HELPER =====
-// Normalizes stored URLs: converts any hardcoded localhost proxy URL
-// to a relative path so images work in production (Railway, etc.)
+// Strips any hardcoded localhost origin so images work in production
 function fixImageUrl(url) {
   if (!url) return 'assets/oud-noir.png';
-  // If the URL has localhost and points to our proxy, make it relative
-  if (/http:\/\/localhost:\d+(\/api\/media\/file\/)/i.test(url)) {
-    return url.replace(/^http:\/\/localhost:\d+/, '');
+  if (url.includes('localhost') && url.includes('/api/media/file/')) {
+    return url.substring(url.indexOf('/api/media/file/'));
   }
   return url;
 }
+
 
 // ===== PRODUCTS DATA =====
 const PRODUCTS = [

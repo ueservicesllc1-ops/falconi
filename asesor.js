@@ -1,10 +1,10 @@
 // Falconi Parfums — Advisor & Inventory Panel
 
-// ===== IMAGE URL HELPER (same as app.js) =====
+// ===== IMAGE URL HELPER =====
 function fixImageUrl(url) {
   if (!url) return 'assets/oud-noir.png';
-  if (/http:\/\/localhost:\d+(\/api\/media\/file\/)/i.test(url)) {
-    return url.replace(/^http:\/\/localhost:\d+/, '');
+  if (url.includes('localhost') && url.includes('/api/media/file/')) {
+    return url.substring(url.indexOf('/api/media/file/'));
   }
   return url;
 }
