@@ -3,13 +3,14 @@
    ========================================================= */
 
 // ===== IMAGE URL HELPER =====
-// Maps legacy localhost proxy URLs → direct Backblaze B2 CDN URL
-// Bucket must be set to PUBLIC in Backblaze dashboard
+// Converts any stored URL to use our server proxy at /api/media/file/
+// The proxy fetches from B2 server-side (no credentials, public bucket)
 function fixImageUrl(url) {
   if (!url) return 'assets/oud-noir.png';
+  // Extract the key from any URL format and route through proxy
   if (url.includes('/api/media/file/')) {
     const key = url.substring(url.indexOf('/api/media/file/') + '/api/media/file/'.length);
-    return `https://f005.backblazeb2.com/file/falconi/${key}`;
+    return `/api/media/file/${key}`;
   }
   return url;
 }
